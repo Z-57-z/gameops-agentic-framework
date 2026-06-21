@@ -160,7 +160,7 @@ creation, so credentials are injected as environment variables instead:
 Values never live in the config file — set them where the server runs:
 
 ```bash
-export OPENAI_API_KEY=sk-…       # on the server
+export OPENAI_API_KEY=<your-openai-api-key>       # on the server
 export GIT_TOKEN=github_pat_…    # private-repo clone/fetch/push
 ```
 

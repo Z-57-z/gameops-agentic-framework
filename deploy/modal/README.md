@@ -312,7 +312,7 @@ credential vars to its runners:
 
 ```bash
 modal secret create omnigent-llm \
-  ANTHROPIC_API_KEY=sk-ant-… OPENAI_API_KEY=sk-…
+  ANTHROPIC_API_KEY=<your-anthropic-api-key> OPENAI_API_KEY=<your-openai-api-key>
 ```
 
 The forwarded set covers the variables the harnesses themselves

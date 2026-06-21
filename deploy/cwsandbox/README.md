@@ -205,7 +205,7 @@ launcher copies the value from the launching environment into the sandbox, and
 the in-sandbox host forwards the standard harness credential vars to its runners:
 
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-…   # on the server (managed) or in your shell (CLI)
+export ANTHROPIC_API_KEY=<your-anthropic-api-key>   # on the server (managed) or in your shell (CLI)
 ```
 
 ```yaml

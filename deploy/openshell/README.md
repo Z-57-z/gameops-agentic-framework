@@ -285,7 +285,7 @@ harness credential vars (`ANTHROPIC_API_KEY`, `CLAUDE_CODE_OAUTH_TOKEN`,
 `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `GEMINI_API_KEY`, …) to its runners.
 
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-…
+export ANTHROPIC_API_KEY=<your-anthropic-api-key>
 export OMNIGENT_OPENSHELL_SANDBOX_ENV=ANTHROPIC_API_KEY
 ```
 

@@ -17,7 +17,7 @@ anyone needs to read through.
    don't involve the reviewer yet.
 3. Dispatch a DIFFERENT-vendor sub-agent as reviewer (Claude built it →
    `codex` or `pi`; Codex built it → `claude_code` or `pi`; Pi built it →
-   `claude_code` or `codex`). Use a task-based title such as
+   `claude_code` or `codex`). Use a ta<your-openai-api-key> title such as
    `review-auth-refactor`, never the raw vendor name:
    `sys_session_send(agent="claude_code"|"codex"|"pi", title="review-<task_slug>",
    args={purpose: "review", input: "<the diff> + <the acceptance contract>.

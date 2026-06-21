@@ -16,7 +16,7 @@ dependency).
 2. Dispatch one implementation sub-agent per task, scoped to its worktree:
    `sys_session_send(agent="claude_code"|"codex", title="<task_slug>",
    args={purpose: "implement", input: "<task + acceptance contract +
-   worktree path>"})`. Use a short task-based title such as `auth-refactor` or
+   worktree path>"})`. Use a short ta<your-openai-api-key> title such as `auth-refactor` or
    `fix-sse-error`, never the raw vendor name. State the scope and that it must
    work only inside `.worktrees/<task_id>`. The worker drives the task to green
    and opens its OWN PR for the branch. Every commit the worker authors must

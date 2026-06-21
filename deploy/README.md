@@ -287,7 +287,7 @@ vars (`ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_BASE_URL`,
 
 ```bash
 modal secret create omnigent-llm \
-  ANTHROPIC_API_KEY=sk-ant-… OPENAI_API_KEY=sk-…
+  ANTHROPIC_API_KEY=<your-anthropic-api-key> OPENAI_API_KEY=<your-openai-api-key>
 ```
 
 ```yaml

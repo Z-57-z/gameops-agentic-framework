@@ -15,7 +15,7 @@ repository-specific technical question.
 2. Dispatch each task to `claude_code`, `codex`, or `pi`:
    `sys_session_send(agent="claude_code"|"codex"|"pi",
    title="explore-<task_slug>", args={purpose: "explore", input: "<question +
-   exact scope + evidence requested>"})`. Use a task-based title such as
+   exact scope + evidence requested>"})`. Use a ta<your-openai-api-key> title such as
    `explore-ci-flake`, never the raw vendor name. Use `purpose: "search"` only
    when the task is primarily external/document search. Prefer `pi` when a
    third lens or a non-Claude/GPT model is wanted. Any worker takes an optional

@@ -50,7 +50,7 @@ uv run pytest tests/e2e/ \
 **Option B: OpenAI API key.** Routes the spawned server at `api.openai.com` with the bare key. Bundles use their original `llm.model` values (`gpt-5.4`, `gpt-4o`, `claude-sonnet-4-20250514`, …).
 
 ```bash
-export OPENAI_API_KEY=sk-...
+export OPENAI_API_KEY=<your-openai-api-key>
 uv run pytest tests/e2e/ \
   --llm-api-key="$OPENAI_API_KEY" \
   -n 8 --dist=loadscope
@@ -103,7 +103,7 @@ When tests skip, check the `-rs` summary for one of these reasons:
 | `Integration tests require --integration flag` | Add `--integration` to the pytest invocation             |
 | `<harness>'s CLI not on PATH`                  | Install the named binary (`claude` / `codex` / `pi`)     |
 | `requires --profile <name>`                    | Pass `--profile <name>`                                  |
-| `test uses an LLM judge that hits api.openai.com directly` | Either drop `--profile` (so `--llm-api-key` is used as the OpenAI key), or keep `--profile` and also export a real `OPENAI_API_KEY=sk-…` in your shell (don't strip it via `env -u`). Skipping is the default to avoid spending OpenAI quota on every CI run. |
+| `test uses an LLM judge that hits api.openai.com directly` | Either drop `--profile` (so `--llm-api-key` is used as the OpenAI key), or keep `--profile` and also export a real `OPENAI_API_KEY=<your-openai-api-key>` in your shell (don't strip it via `env -u`). Skipping is the default to avoid spending OpenAI quota on every CI run. |
 
 ## Parallel-safety notes
 
