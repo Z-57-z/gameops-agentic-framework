@@ -1,13 +1,13 @@
 # Omnigent bot identities & attribution setup
 
 This doc explains how commits and automated PR reviews in the
-`omnigent-ai/omnigent` repo are attributed, and how the supporting GitHub App
+`Z-57-z/gameops-agentic-framework` repo are attributed, and how the supporting GitHub App
 was set up. There are **two deliberately distinct identities** — do not
 conflate them:
 
 | Identity | Used for | Why this identity |
 | --- | --- | --- |
-| `omnigent <noreply@omnigent.ai>` | Co-author trailer on commits authored by **polly's coding sub-agents** | These commits are produced by `git commit` in a worker's local worktree — they are **not** GitHub Actions runs, so a plain org co-author is the honest attribution. No GitHub App user is involved. |
+| `omnigent <noreply@github.com/Z-57-z/gameops-agentic-framework>` | Co-author trailer on commits authored by **polly's coding sub-agents** | These commits are produced by `git commit` in a worker's local worktree — they are **not** GitHub Actions runs, so a plain org co-author is the honest attribution. No GitHub App user is involved. |
 | `omnigent-ci[bot]` (GitHub App) | **CI automation**: lockfile-regen commits/PRs **and** automated PR-review comments | These actions genuinely run inside GitHub Actions, where the App's private key lives and a short-lived installation token is minted per run. The App is an org-owned, least-privilege identity. |
 
 > **Why two identities and not one?** An earlier draft of this work tried to use
@@ -50,7 +50,7 @@ reverse-engineered.
 
 ### 1. Create the App
 
-Created at `https://github.com/organizations/omnigent-ai/settings/apps/new`:
+Created at `https://github.com/organizations/Z-57-z/settings/apps/new`:
 
 - **GitHub App name:** `omnigent-ci` → actor `omnigent-ci[bot]`.
 - **Homepage URL:** any valid URL.
@@ -60,8 +60,8 @@ Created at `https://github.com/organizations/omnigent-ai/settings/apps/new`:
   - **Pull requests:** Read and write — open/update PRs **and post reviews**.
   - **Metadata:** Read-only (mandatory).
   - Everything else **No access**.
-- **Where can this App be installed?** Only on `omnigent-ai`.
-- Installed into `omnigent-ai`, scoped to the `omnigent` repo.
+- **Where can this App be installed?** Only on `Z-57-z`.
+- Installed into `Z-57-z`, scoped to the `gameops-agentic-framework` repo.
 
 **App ID `4082516`.** A private key (`.pem`) was generated and stored as a
 secret (step 3).
@@ -82,7 +82,7 @@ gh api users/omnigent-ci%5Bbot%5D --jq '.id'
 
 ### 3. Store the App credentials
 
-In **`omnigent-ai/omnigent` → Settings → Secrets and variables → Actions**:
+In **`Z-57-z/gameops-agentic-framework` → Settings → Secrets and variables → Actions**:
 
 - **Variable** `OMNIGENT_BOT_APP_ID` = `4082516`
 - **Secret** `OMNIGENT_BOT_APP_KEY` = the App's `.pem` private key
@@ -107,7 +107,7 @@ polly never commits directly; its coding sub-agents (`claude_code`, `codex`,
 ends with a co-author trailer attributing it to the org:
 
 ```
-Co-authored-by: omnigent <noreply@omnigent.ai>
+Co-authored-by: omnigent <noreply@github.com/Z-57-z/gameops-agentic-framework>
 ```
 
 This requirement lives in the worker IMPLEMENT instructions:
@@ -184,7 +184,7 @@ token and posts the review **as `omnigent-ci[bot]`**:
 
 | Surface | Identity on the artifact | Where it's wired |
 | --- | --- | --- |
-| polly sub-agent commits | `omnigent <noreply@omnigent.ai>` (co-author trailer) | `examples/polly/agents/*/config.yaml` |
+| polly sub-agent commits | `omnigent <noreply@github.com/Z-57-z/gameops-agentic-framework>` (co-author trailer) | `examples/polly/agents/*/config.yaml` |
 | Lockfile-regen commits/PRs | `omnigent-ci[bot]` | `oss-regenerate-and-smoke.yml`, `oss-regen-on-comment.yml` |
 | Automated PR review comments | `omnigent-ci[bot]` (fallback `github-actions[bot]`) | `polly-review.yml` |
 

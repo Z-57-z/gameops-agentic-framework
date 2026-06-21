@@ -16,7 +16,7 @@ a managed Postgres, and serves it over HTTPS on `*.up.railway.app`.
 
 ## What gets provisioned
 
-- **omnigent** — web service that pulls `ghcr.io/omnigent-ai/omnigent-server`
+- **omnigent** — web service that pulls `ghcr.io/z-57-z/gameops-agentic-framework-server`
   via `deploy/docker/Dockerfile.prebuilt`, served on `https://<project>.up.railway.app`.
 - **Postgres** — Railway-managed PostgreSQL plugin you add to the project.
   Railway links its `DATABASE_URL` into the app as a reference to the database
@@ -148,7 +148,7 @@ $10–15/month total including the Postgres plugin.
 One-time setup done by the repo owner after the repository is public:
 
 1. Go to `railway.com/new/template` and click **Create template**.
-2. Point it at `github.com/omnigent-ai/omnigent`.
+2. Point it at `github.com/Z-57-z/gameops-agentic-framework`.
 3. Select the **Postgres** plugin.
 4. Pre-fill default env vars with descriptions for the optional OIDC fields.
 5. Click **Publish**. Copy the generated deploy URL and update the badge at the

@@ -15,7 +15,7 @@ Omnigent server is live with HTTPS in a few minutes.
 
 | Platform | Button | Docs |
 |---|---|---|
-| **Render** | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/omnigent-ai/omnigent) | [`render/README.md`](render/README.md) |
+| **Render** | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Z-57-z/gameops-agentic-framework) | [`render/README.md`](render/README.md) |
 | **Railway** | *(button pending; see below)* | [`railway/README.md`](railway/README.md) |
 
 <!-- TODO(oss-release): publish the Railway template at railway.com/new/template
@@ -249,7 +249,7 @@ Each sandbox authenticates back with a server-minted, per-launch token, so
 no user credentials ever enter the sandbox.
 
 **The host image.** Sandboxes boot from the official prebaked host image
-(`ghcr.io/omnigent-ai/omnigent-host:latest`, published by CI from the `host`
+(`ghcr.io/z-57-z/gameops-agentic-framework-host:latest`, published by CI from the `host`
 target of [`docker/Dockerfile`](docker/Dockerfile)), so the host starts in
 seconds instead of installing Omnigent at boot. The image ships the
 coding-harness CLIs (`claude`, `codex`, `pi`), so agents on any harness run

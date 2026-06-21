@@ -117,7 +117,7 @@ per the printed instructions, and update `OMNIGENT_ACCOUNTS_BASE_URL`
 ### Upgrading
 
 `modal deploy deploy/modal/modal_app.py` again — Modal re-resolves
-`ghcr.io/omnigent-ai/omnigent-server:latest`, so a redeploy is an
+`ghcr.io/z-57-z/gameops-agentic-framework-server:latest`, so a redeploy is an
 upgrade. The rollout replaces the container; runners reconnect.
 
 ### Cost
@@ -160,7 +160,7 @@ flow), Modal credentials must be available — either that file or the
 
 ### The host image
 
-Sandboxes boot from `ghcr.io/omnigent-ai/omnigent-host:latest`, an image
+Sandboxes boot from `ghcr.io/z-57-z/gameops-agentic-framework-host:latest`, an image
 published by CI from the `host` target of
 [`deploy/docker/Dockerfile`](../docker/Dockerfile) with Omnigent
 and its dependencies preinstalled — including the coding-harness CLIs

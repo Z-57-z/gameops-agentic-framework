@@ -1345,7 +1345,7 @@ def create_app(
         """
         from importlib.metadata import version as _pkg_version
 
-        return {"version": _pkg_version("omnigent")}
+        return {"version": _pkg_version("gameops-agentic-framework")}
 
     @app.get("/v1/info")
     async def info() -> dict[str, bool | str | None]:

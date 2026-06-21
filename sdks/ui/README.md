@@ -1,15 +1,13 @@
-# omnigent-ui-sdk
+# gameops-agentic-ui-sdk
 
-Terminal UI components (Rich + prompt_toolkit) for building
-[omnigent](https://github.com/omnigent-ai/omnigent) frontends.
+Terminal UI components (Rich + prompt_toolkit) for building [GameOps Agentic Framework](https://github.com/Z-57-z/gameops-agentic-framework) frontends.
 
-`omnigent-ui-sdk` provides the reusable rendering and input building blocks used
-by the omnigent CLI to display streaming agent output in the terminal. It is
-released in lockstep with the core `omnigent` package at a matching version:
+`gameops-agentic-ui-sdk` provides reusable rendering and input building blocks used by the CLI to display streaming agent output in the terminal.
+
+It is released in lockstep with the core `gameops-agentic-framework` package at a matching version:
 
 ```bash
-pip install omnigent-ui-sdk
+pip install gameops-agentic-ui-sdk
 ```
 
-See the [omnigent repository](https://github.com/omnigent-ai/omnigent) for full
-documentation.
+See the [GameOps Agentic Framework repository](https://github.com/Z-57-z/gameops-agentic-framework) for full documentation.

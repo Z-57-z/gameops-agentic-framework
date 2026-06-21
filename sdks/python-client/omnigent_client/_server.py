@@ -84,7 +84,7 @@ class LocalServer:
 
     def _start(self) -> None:
         """Launch the server subprocess."""
-        self._tmpdir = tempfile.mkdtemp(prefix="omnigent-client-")
+        self._tmpdir = tempfile.mkdtemp(prefix="gameops-agentic-client-")
         db_uri = f"sqlite:///{self._tmpdir}/chat.db"
         art_loc = f"{self._tmpdir}/artifacts"
 

@@ -380,7 +380,7 @@ jobs:
           # (not expression interpolation) to avoid expression injection.
           {
             echo "<!-- polly-review-bot -->"
-            echo "## <img src=\"https://raw.githubusercontent.com/omnigent-ai/omnigent/main/docs/images/omnigent-logo.svg\" alt=\"\" height=\"20\" valign=\"middle\" /> Polly AI Review"
+            echo "## <img src=\"https://raw.githubusercontent.com/Z-57-z/gameops-agentic-framework/main/docs/images/omnigent-logo.svg\" alt=\"\" height=\"20\" valign=\"middle\" /> Polly AI Review"
             echo ""
             echo "$REVIEW_TEXT"
             echo ""

@@ -98,7 +98,7 @@ Provides:
 pip install -e sdks/ui
 ```
 
-(Pulls in `omnigent-client` as a dependency.)
+(Pulls in `gameops-agentic-client` as a dependency.)
 
 ### Minimal REPL
 

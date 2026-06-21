@@ -2696,7 +2696,7 @@ wheels = [
 ]
 
 [[package]]
-name = "omnigent"
+name = "gameops-agentic-framework"
 version = "0.2.0.dev0"
 source = { editable = "." }
 dependencies = [
@@ -2712,8 +2712,8 @@ dependencies = [
     { name = "httpx" },
     { name = "keyring" },
     { name = "mcp" },
-    { name = "omnigent-client" },
-    { name = "omnigent-ui-sdk" },
+    { name = "gameops-agentic-client" },
+    { name = "gameops-agentic-ui-sdk" },
     { name = "openai" },
     { name = "openai-agents" },
     { name = "opentelemetry-exporter-otlp-proto-grpc" },
@@ -2843,8 +2843,8 @@ requires-dist = [
     { name = "modal", marker = "extra == 'modal'", specifier = ">=1.0,<2" },
     { name = "moto", extras = ["s3"], marker = "extra == 'dev'", specifier = ">=5,<6" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.10" },
-    { name = "omnigent-client", editable = "sdks/python-client" },
-    { name = "omnigent-ui-sdk", editable = "sdks/ui" },
+    { name = "gameops-agentic-client", editable = "sdks/python-client" },
+    { name = "gameops-agentic-ui-sdk", editable = "sdks/ui" },
     { name = "openai", specifier = ">=1.0,<3" },
     { name = "openai-agents", specifier = ">=0.0.17" },
     { name = "openai-agents", marker = "extra == 'agents-sdk'", specifier = ">=0.1,<1" },
@@ -2888,28 +2888,28 @@ requires-dist = [
 provides-extras = ["claude-sdk", "openai-agents", "all", "bedrock", "s3", "vertex", "modal", "daytona", "cwsandbox", "e2b", "openshell", "tracing", "agents-sdk", "antigravity", "cursor", "databricks", "dev"]
 
 [[package]]
-name = "omnigent-client"
+name = "gameops-agentic-client"
 version = "0.2.0.dev0"
 source = { editable = "sdks/python-client" }
 dependencies = [
     { name = "httpx" },
-    { name = "omnigent" },
+    { name = "gameops-agentic-framework" },
     { name = "pydantic" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "httpx", specifier = ">=0.27" },
-    { name = "omnigent", editable = "." },
+    { name = "gameops-agentic-framework", editable = "." },
     { name = "pydantic", specifier = ">=2.0,<3" },
 ]
 
 [[package]]
-name = "omnigent-ui-sdk"
+name = "gameops-agentic-ui-sdk"
 version = "0.2.0.dev0"
 source = { editable = "sdks/ui" }
 dependencies = [
-    { name = "omnigent-client" },
+    { name = "gameops-agentic-client" },
     { name = "prompt-toolkit" },
     { name = "pyyaml" },
     { name = "rich" },
@@ -2917,7 +2917,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "omnigent-client", specifier = "==0.2.0.dev0" },
+    { name = "gameops-agentic-client", specifier = "==0.2.0.dev0" },
     { name = "prompt-toolkit", specifier = ">=3" },
     { name = "pyyaml", specifier = ">=6.0,<7" },
     { name = "rich", specifier = ">=13" },

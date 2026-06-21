@@ -225,11 +225,11 @@ included (no SPA bundle, no psycopg, no uvicorn entrypoint).
 
 CI publishes it next to the server image, with the same tag scheme:
 
-- `ghcr.io/omnigent-ai/omnigent-host:latest` — tracks main HEAD
+- `ghcr.io/z-57-z/gameops-agentic-framework-host:latest` — tracks main HEAD
   (the default for `omnigent sandbox create --provider modal`)
-- `ghcr.io/omnigent-ai/omnigent-host:sha-<short>` — immutable
+- `ghcr.io/z-57-z/gameops-agentic-framework-host:sha-<short>` — immutable
   per-commit pin
-- `ghcr.io/omnigent-ai/omnigent-host:vX.Y.Z` — release tags
+- `ghcr.io/z-57-z/gameops-agentic-framework-host:vX.Y.Z` — release tags
 
 Build it locally from the repo root:
 
@@ -241,7 +241,7 @@ docker build -t omnigent-host:latest --target host \
 ### Using it with the Modal sandbox provider
 
 `omnigent sandbox create --provider modal` boots sandboxes from
-`ghcr.io/omnigent-ai/omnigent-host:latest` by default. Your local
+`ghcr.io/z-57-z/gameops-agentic-framework-host:latest` by default. Your local
 checkout's wheels are still built and overlaid on top at create time
 (`pip install --force-reinstall --no-deps`), so the sandbox runs
 exactly your code — the baked image just supplies the dependency

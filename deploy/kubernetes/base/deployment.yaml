@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: omnigent
-          image: ghcr.io/omnigent-ai/omnigent-server:latest
+          image: ghcr.io/z-57-z/gameops-agentic-framework-server:latest
           ports:
             - containerPort: 8000
               name: http

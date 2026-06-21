@@ -43,7 +43,7 @@ export CWSANDBOX_BASE_URL=https://api.cwsandbox.com   # optional (this is the de
 
 ## The host image
 
-Sandboxes boot from `ghcr.io/omnigent-ai/omnigent-host:latest`, published by CI
+Sandboxes boot from `ghcr.io/z-57-z/gameops-agentic-framework-host:latest`, published by CI
 from the `host` target of [`deploy/docker/Dockerfile`](../docker/Dockerfile)
 with Omnigent and its dependencies preinstalled — including the coding-harness
 CLIs (`claude`, `codex`, `pi`), so agents on any harness run without an

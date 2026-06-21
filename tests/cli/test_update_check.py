@@ -118,7 +118,7 @@ def test_find_repo_root_accepts_git_plus_pyproject(
     repo = tmp_path / "omnigent"
     repo.mkdir()
     (repo / ".git").mkdir()
-    (repo / "pyproject.toml").write_text('[project]\nname = "omnigent"\n')
+    (repo / "pyproject.toml").write_text('[project]\nname = "gameops-agentic-framework"\n')
     pkg_dir = repo / "omnigent"
     pkg_dir.mkdir()
     fake_file = pkg_dir / "update_check.py"
@@ -670,14 +670,14 @@ def test_read_wheel_info_uv_git_install(tmp_path: Path, monkeypatch: pytest.Monk
         # ``git`` to ``****``. We restore ``git`` so the reinstall
         # command can authenticate; without this it ssh's in as ``****``.
         (
-            "git+ssh://****@github.com/omnigent-ai/omnigent.git",
-            "git+ssh://git@github.com/omnigent-ai/omnigent.git",
+            "git+ssh://****@github.com/Z-57-z/gameops-agentic-framework.git",
+            "git+ssh://git@github.com/Z-57-z/gameops-agentic-framework.git",
         ),
         # Same redaction, but the URL was stored without the ``git+``
         # VCS prefix (the shape uv wrote on the machine in the report).
         (
-            "ssh://****@github.com/omnigent-ai/omnigent.git",
-            "ssh://git@github.com/omnigent-ai/omnigent.git",
+            "ssh://****@github.com/Z-57-z/gameops-agentic-framework.git",
+            "ssh://git@github.com/Z-57-z/gameops-agentic-framework.git",
         ),
         # Already-correct SSH user — must be left exactly as-is.
         (
@@ -730,7 +730,7 @@ def test_read_wheel_info_repairs_redacted_ssh_user(
     command) would still contain ``****@`` and the user would hit
     ``Permission denied (publickey)`` when they confirmed the prompt.
     """
-    redacted_url = "ssh://****@github.com/omnigent-ai/omnigent.git"
+    redacted_url = "ssh://****@github.com/Z-57-z/gameops-agentic-framework.git"
     dist = _write_fake_dist_info(
         tmp_path,
         installer="uv",
@@ -749,7 +749,7 @@ def test_read_wheel_info_repairs_redacted_ssh_user(
     assert info is not None
     # The redacted ``****@`` user was rewritten to the canonical
     # ``git@`` and normalized to the ``git+`` reinstall form.
-    assert info.vcs_url == "git+ssh://git@github.com/omnigent-ai/omnigent.git"
+    assert info.vcs_url == "git+ssh://git@github.com/Z-57-z/gameops-agentic-framework.git"
     # ``****`` must not survive anywhere in the URL we'd display/run.
     assert "****" not in info.vcs_url
 
@@ -759,7 +759,7 @@ def test_read_wheel_info_repairs_redacted_ssh_user(
     assert suggestion.runnable is True
     assert (
         suggestion.command
-        == "uv tool install --reinstall git+ssh://git@github.com/omnigent-ai/omnigent.git"
+        == "uv tool install --reinstall git+ssh://git@github.com/Z-57-z/gameops-agentic-framework.git"
     )
 
 

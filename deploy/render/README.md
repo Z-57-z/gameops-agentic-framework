@@ -4,10 +4,10 @@ Deploy Omnigent to Render in one click. Render provisions the app and a
 managed Postgres database, assigns an HTTPS URL on `*.onrender.com`, and
 handles SSL automatically. No local tooling required.
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/omnigent-ai/omnigent)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Z-57-z/gameops-agentic-framework)
 
-> **Note:** The button points at the public repo `github.com/omnigent-ai/omnigent`.
-> It goes live once that repo **and** the `ghcr.io/omnigent-ai/omnigent-server`
+> **Note:** The button points at the public repo `github.com/Z-57-z/gameops-agentic-framework`.
+> It goes live once that repo **and** the `ghcr.io/z-57-z/gameops-agentic-framework-server`
 > package are public; until then it only works if you connect Render to the
 > (private) repo in the dashboard first.
 
@@ -16,7 +16,7 @@ handles SSL automatically. No local tooling required.
 The `render.yaml` blueprint at the repo root defines:
 
 - **omnigent** (Starter web service) — pulls the pre-built image
-  `ghcr.io/omnigent-ai/omnigent-server:latest` (CI-built; ships the web UI
+  `ghcr.io/z-57-z/gameops-agentic-framework-server:latest` (CI-built; ships the web UI
   bundle), served on `https://omnigent-<hash>.onrender.com`. While the GHCR
   package is private, add a Render registry credential and reference it from
   `render.yaml` (`image.creds`); once public, the pull is anonymous.

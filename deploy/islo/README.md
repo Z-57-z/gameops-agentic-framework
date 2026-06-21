@@ -59,7 +59,7 @@ key is the only required credential — no SDK, no `~/.config` file.
 
 ## The host image
 
-Sandboxes boot from `ghcr.io/omnigent-ai/omnigent-host:latest`, published
+Sandboxes boot from `ghcr.io/z-57-z/gameops-agentic-framework-host:latest`, published
 by CI from the `host` target of
 [`deploy/docker/Dockerfile`](../docker/Dockerfile) with Omnigent and its
 dependencies preinstalled — including the coding-harness CLIs (`claude`,

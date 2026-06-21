@@ -1,6 +1,6 @@
 """Modal deploy glue for the Omnigent server.
 
-Runs the standard server image (``ghcr.io/omnigent-ai/omnigent-server``)
+Runs the standard server image (``ghcr.io/z-57-z/gameops-agentic-framework-server``)
 as a single always-on Modal web server, proxying HTTP / SSE / WebSocket
 traffic to the same Docker entrypoint every other container platform
 uses (``deploy/docker/entrypoint.py``). See README.md for the
@@ -15,7 +15,7 @@ import modal
 # source build can't produce (same reason every other platform pulls it;
 # see deploy/docker/Dockerfile.prebuilt). Modal injects its client
 # runtime into the image's Python at image-build time.
-SERVER_IMAGE = "ghcr.io/omnigent-ai/omnigent-server:latest"
+SERVER_IMAGE = "ghcr.io/z-57-z/gameops-agentic-framework-server:latest"
 # The image's uvicorn port (deploy/docker/Dockerfile: EXPOSE 8000).
 SERVER_PORT = 8000
 # First boot runs DB migrations over the network (~1 minute on Neon);

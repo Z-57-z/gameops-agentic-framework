@@ -38,7 +38,7 @@ browser ───────────────►  Worker (src/index.js)
 
 - **Worker** — a thin front that proxies every request to **one** container
   instance (Omnigent keeps an in-memory runner registry, so it's single-replica).
-- **Container** — the official `ghcr.io/omnigent-ai/omnigent-server` image plus
+- **Container** — the official `ghcr.io/z-57-z/gameops-agentic-framework-server` image plus
   the D1 SQLAlchemy dialect, a shim that re-registers it as a proper SQLite
   dialect, and `boto3` (this directory's `Dockerfile`).
 - **D1** is the database. The server reaches it through the

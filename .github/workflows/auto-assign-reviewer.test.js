@@ -30,13 +30,13 @@ async function run({ files, load = {}, current = [], author = "someexternaldev",
     } },
   };
   const context = {
-    repo: { owner: "omnigent-ai", repo: "omnigent" },
+    repo: { owner: "Z-57-z", repo: "gameops-agentic-framework" },
     payload: { pull_request: {
       number: 1, draft: false,
       user: { login: author },
       // precise fork detection compares head vs base full_name
-      head: { repo: { full_name: fork ? "external-contributor/omnigent" : "omnigent-ai/omnigent" } },
-      base: { repo: { full_name: "omnigent-ai/omnigent" } },
+      head: { repo: { full_name: fork ? "external-contributor/gameops-agentic-framework" : "Z-57-z/gameops-agentic-framework" } },
+      base: { repo: { full_name: "Z-57-z/gameops-agentic-framework" } },
       requested_reviewers: current.map((l) => ({ login: l })),
     } },
   };

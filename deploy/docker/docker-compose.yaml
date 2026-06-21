@@ -1,4 +1,4 @@
-# Omnigent server + Postgres (external-runner mode).
+# GameOps Agentic Framework server + Postgres (external-runner mode).
 #
 # Quickstart (single-user dev):
 #
@@ -18,29 +18,29 @@
 #   - header — for deploys behind a proxy that injects
 #     X-Forwarded-Email (Databricks Apps, oauth2-proxy, etc).
 
-name: omnigent
+name: gameops-agentic-framework
 
 services:
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-omnigent}
-      POSTGRES_USER: ${POSTGRES_USER:-omnigent}
+      POSTGRES_DB: ${POSTGRES_DB:-gameops}
+      POSTGRES_USER: ${POSTGRES_USER:-gameops}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-omnigent} -d ${POSTGRES_DB:-omnigent}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gameops} -d ${POSTGRES_DB:-gameops}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  omnigent:
+  server:
     # Pre-built image published to GHCR on every main-branch merge.
     # `docker compose pull` fetches the latest; pin OMNIGENT_IMAGE_TAG
     # to a sha-<short> or vX.Y.Z tag for reproducible deploys.
-    image: ${OMNIGENT_IMAGE:-ghcr.io/omnigent-ai/omnigent-server}:${OMNIGENT_IMAGE_TAG:-latest}
+    image: ${OMNIGENT_IMAGE:-ghcr.io/z-57-z/gameops-agentic-framework-server}:${OMNIGENT_IMAGE_TAG:-latest}
     # Local-build fallback for forks / offline / dev iterations. Used
     # only when the image isn't already pulled AND you run
     # `docker compose up --build` explicitly. The published image in
@@ -56,7 +56,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-omnigent}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-omnigent}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-gameops}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-gameops}
       ARTIFACT_DIR: /data/artifacts
       HOST: 0.0.0.0
       PORT: "8000"

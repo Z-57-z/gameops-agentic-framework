@@ -8,7 +8,7 @@ app = "omnigent"           # change to your app name
 primary_region = "iad"       # pick a region: fly platform regions
 
 [build]
-  image = "ghcr.io/omnigent-ai/omnigent-server:latest"
+  image = "ghcr.io/z-57-z/gameops-agentic-framework-server:latest"
   # For the Fly web-UI Launch (which always builds + pushes to registry.fly.io
   # and has no external-image mode), swap the line above for:
   #   dockerfile = "deploy/docker/Dockerfile.prebuilt"

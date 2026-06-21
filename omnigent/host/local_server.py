@@ -115,7 +115,7 @@ def server_config_signature() -> str:
     from omnigent.server.auth import resolve_auth_source
 
     try:
-        version = importlib.metadata.version("omnigent")
+        version = importlib.metadata.version("gameops-agentic-framework")
     except importlib.metadata.PackageNotFoundError:
         # Running from a source tree with no registered distribution —
         # nothing to key version-drift on, so leave it out of the payload.

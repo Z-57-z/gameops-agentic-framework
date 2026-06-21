@@ -1,8 +1,8 @@
 #!/bin/sh
 
-# Omnigent installer.
+# GameOps Agentic Framework installer.
 #
-# Installs the published `omnigent` wheel from PyPI with uv, wires up PATH,
+# Installs the published `gameops-agentic-framework` wheel from PyPI with uv, wires up PATH,
 # and points you at first-run. The wheel bundles the prebuilt web UI, so the
 # default install needs no Node/npm and runs no build.
 #
@@ -23,7 +23,7 @@
 set -eu
 
 # Published PyPI package, the default install. --version pins a release.
-PACKAGE_NAME="omnigent"
+PACKAGE_NAME="gameops-agentic-framework"
 VERSION=
 # Comma-separated optional-dependency extras to install with the package
 # (e.g. "databricks"), accumulated from one or more --extra flags. Empty =>
@@ -63,19 +63,15 @@ init_style() {
   fi
 }
 
-# The Otto + "omnigent" wordmark lockup, printed once at the top of an
+# The GameOps Agentic Framework wordmark, printed once at the top of an
 # interactive install. Mirrors omnigent.inner.wordmark.lockup_lines(); the
 # whole lockup is painted in the brand magenta (flat — no gradient in sh).
 # Skipped off a TTY (use_terminal_ui) so piped/CI installs stay clean.
 print_banner() {
   use_terminal_ui || return 0
   printf '\n'
-  printf '%s  ⠀⠀⠀⢠⣿⡄⠀⠀⠀   ██████╗ ███╗   ███╗███╗   ██╗██╗ ██████╗ ███████╗███╗   ██╗████████╗%s\n' "$MAGENTA" "$RESET"
-  printf '%s  ⢴⣶⣶⠉⣿⠉⣶⣶⡦  ██╔═══██╗████╗ ████║████╗  ██║██║██╔════╝ ██╔════╝████╗  ██║╚══██╔══╝%s\n' "$MAGENTA" "$RESET"
-  printf '%s  ⠀⠙⣿⣶⣿⣶⣿⠋⠀  ██║   ██║██╔████╔██║██╔██╗ ██║██║██║  ███╗█████╗  ██╔██╗ ██║   ██║%s\n' "$MAGENTA" "$RESET"
-  printf '%s  ⠀⢠⣿⡿⠿⢿⣿⡄⠀  ╚██████╔╝██║ ╚═╝ ██║██║ ╚████║██║╚██████╔╝███████╗██║ ╚████║   ██║%s\n' "$MAGENTA" "$RESET"
-  printf '%s  ⠀⠈⠁⠀⠀⠀⠈⠁⠀   ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═══╝╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝   ╚═╝%s\n' "$MAGENTA" "$RESET"
-  printf '%s  all your agents, one cli%s\n\n' "$DIM" "$RESET"
+  printf '%s%s%s\n' "$MAGENTA" "GameOps Agentic Framework" "$RESET"
+  printf '%sgame operations knowledge agents, one framework%s\n\n' "$DIM" "$RESET"
 }
 
 usage() {
@@ -463,7 +459,7 @@ check_bubblewrap() {
 }
 
 install_omnigent() {
-  # Default: the published PyPI wheel (`omnigent`, optionally `omnigent==X`).
+  # Default: the published PyPI wheel (`omnigent`, optionally `gameops-agentic-framework==X`).
   # The wheel ships the prebuilt web UI, so there is no npm/Node step and no
   # source build — the fast, reliable path. `--repo` switches INSTALL_URL to a
   # git ref, which builds from source (and needs npm, checked above).
@@ -483,13 +479,13 @@ install_omnigent() {
     else
       target="$INSTALL_URL"
     fi
-    step "Installing Omnigent from source${extras_suffix:+ $extras_suffix} (Python $PYTHON_VERSION)"
+    step "Installing GameOps Agentic Framework from source${extras_suffix:+ $extras_suffix} (Python $PYTHON_VERSION)"
   elif [ -n "$VERSION" ]; then
     target="${PACKAGE_NAME}${extras_suffix}==${VERSION}"
-    step "Installing Omnigent $VERSION${extras_suffix:+ $extras_suffix} (Python $PYTHON_VERSION)"
+    step "Installing GameOps Agentic Framework $VERSION${extras_suffix:+ $extras_suffix} (Python $PYTHON_VERSION)"
   else
     target="${PACKAGE_NAME}${extras_suffix}"
-    step "Installing Omnigent${extras_suffix:+ $extras_suffix} (Python $PYTHON_VERSION)"
+    step "Installing GameOps Agentic Framework${extras_suffix:+ $extras_suffix} (Python $PYTHON_VERSION)"
   fi
   # --force so re-running upgrades instead of no-op'ing; -q hides uv's
   # "Installed N executables" summary (the package also ships an `omni` alias).

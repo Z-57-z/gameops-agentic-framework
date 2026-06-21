@@ -3,15 +3,15 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "omnigent"
+name = "gameops-agentic-framework"
 version = "0.2.0.dev0"
-description = "Omnigent: declarative agent authoring and runtime framework"
+description = "GameOps agentic framework for RAG-powered operations knowledge workflows"
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [
-    { name = "Databricks, Inc." },
+    { name = "Z-57-z" },
 ]
-keywords = ["agents", "llm", "ai", "databricks", "cli"]
+keywords = ["gameops", "rag", "knowledge-base", "agents", "llm", "ai", "cli"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -22,11 +22,11 @@ classifiers = [
 ]
 dependencies = [
     # SDK path-deps, version-locked: the three packages release together at
-    # one version, so a published `omnigent==X` must resolve the SDK wheels
-    # built alongside it (release-omnigent.yml verifies these pins match the
+    # one version, so a published `gameops-agentic-framework==X` must resolve the SDK wheels
+    # built alongside it (release-gameops-agentic-framework.yml verifies these pins match the
     # release tag). Local/editable installs still resolve via tool.uv.sources.
-    "omnigent-client==0.2.0.dev0",
-    "omnigent-ui-sdk==0.2.0.dev0",
+    "gameops-agentic-client==0.2.0.dev0",
+    "gameops-agentic-ui-sdk==0.2.0.dev0",
     # Merged from omnigent + omnigent.
     "pyyaml>=6.0,<7",
     "openai>=1.0,<3",
@@ -219,19 +219,15 @@ dev = [
 ]
 
 [project.scripts]
-# Unified entry point. `omnigent` is the click-based CLI that absorbs
-# the legacy argparse commands from `omnigent/inner/cli.py` plus the
-# omnigent `ap` subcommands. See designs/UNIFICATION.md § CLI
-# absorption. `omni` is installed as a short alias — both resolve to
-# the same entry point. (No former-name aliases: only `omnigent` and
-# `omni` ship, internal and OSS alike.)
-omnigent = "omnigent.cli:main"
-omni = "omnigent.cli:main"
+# Public CLI entry point for GameOps Agentic Framework. The internal Python
+# package namespace remains `omnigent` during this fork rename to keep the
+# existing runtime and tests compatible.
+gameops-agent = "omnigent.cli:main"
 
 # uv path-deps for the sibling SDK packages (renamed in Stage 3).
 [tool.uv.sources]
-omnigent-client = { path = "sdks/python-client", editable = true }
-omnigent-ui-sdk = { path = "sdks/ui", editable = true }
+gameops-agentic-client = { path = "sdks/python-client", editable = true }
+gameops-agentic-ui-sdk = { path = "sdks/ui", editable = true }
 
 [tool.setuptools]
 include-package-data = true

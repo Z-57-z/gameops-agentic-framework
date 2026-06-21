@@ -12,12 +12,12 @@ across PyPI releases. Three pieces ship together:
 
 ## Background
 
-- The CLI ships as `omnigent` / `omni` → `omnigent.cli:main()`; the installed
-  version comes from `importlib.metadata.version("omnigent")`.
-- Releases publish three lockstep packages (`omnigent`, `omnigent-client`,
-  `omnigent-ui-sdk`) to PyPI via `.github/workflows/release-omnigent.yml`.
+- The CLI ships as `gameops-agent` → `omnigent.cli:main()`; the installed
+  version comes from `importlib.metadata.version("gameops-agentic-framework")`.
+- Releases publish three lockstep packages (`omnigent`, `gameops-agentic-client`,
+  `gameops-agentic-ui-sdk`) to PyPI via `.github/workflows/release-gameops-agentic-framework.yml`.
   **No GitHub Releases are cut**, so the source of truth for "latest version"
-  is the PyPI JSON API: `https://pypi.org/pypi/omnigent/json` → `info.version`.
+  is the PyPI JSON API: `https://pypi.org/pypi/gameops-agentic-framework/json` → `info.version`.
 - The local server is a detached process on `:6767`, tracked by
   `~/.omnigent/local_server.pid` plus a config-signature sidecar
   (`local_server.sig`). `ensure_local_omnigent_server()` reuses a healthy

@@ -98,7 +98,7 @@ automatically — Omnigent needs no extra configuration.
 
 ## The host image
 
-Sandboxes boot from `ghcr.io/omnigent-ai/omnigent-host:latest`, published by CI
+Sandboxes boot from `ghcr.io/z-57-z/gameops-agentic-framework-host:latest`, published by CI
 from the `host` target of [`deploy/docker/Dockerfile`](../docker/Dockerfile) with
 Omnigent and its dependencies preinstalled — including the coding-harness CLIs
 (`claude`, `codex`, `pi`), so agents on any harness run without an in-sandbox
@@ -116,7 +116,7 @@ Before using an image with OpenShell, smoke-test that contract from the same
 Docker daemon the gateway uses:
 
 ```bash
-docker run --rm --entrypoint sh ghcr.io/omnigent-ai/omnigent-host:latest \
+docker run --rm --entrypoint sh ghcr.io/z-57-z/gameops-agentic-framework-host:latest \
   -lc 'id sandbox && command -v ip && command -v nft'
 ```
 
@@ -366,7 +366,7 @@ match the [Modal git guide](../modal/README.md#git-credentials-private-repositor
 | Variable | Where it's read | Purpose |
 |---|---|---|
 | `OPENSHELL_GATEWAY` | CLI machine / server | Gateway name to use; overrides `~/.config/openshell/active_gateway` (read by the SDK). `sandbox.openshell.cluster` takes precedence for managed. |
-| `OMNIGENT_OPENSHELL_HOST_IMAGE` | CLI machine | Override the host image ref (default `ghcr.io/omnigent-ai/omnigent-host:latest`); `sandbox.openshell.image` is the managed equivalent |
+| `OMNIGENT_OPENSHELL_HOST_IMAGE` | CLI machine | Override the host image ref (default `ghcr.io/z-57-z/gameops-agentic-framework-host:latest`); `sandbox.openshell.image` is the managed equivalent |
 | `OMNIGENT_OPENSHELL_SANDBOX_ENV` | CLI machine | Comma-separated launcher-side env var names to inject into the sandbox; `sandbox.openshell.env` is the managed equivalent |
 | `OMNIGENT_RUNNER_ENV_PASSTHROUGH` | inside the sandbox (injected) | Extra env var names the host forwards to runners |
 | `GIT_TOKEN` / `GIT_USERNAME` | inside the sandbox (injected) | HTTPS credentials for private repository clone / fetch / push |

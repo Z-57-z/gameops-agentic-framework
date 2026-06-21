@@ -10,7 +10,7 @@
 # i.e. the ``deploy/docker/entrypoint.py`` change that ships alongside this
 # directory. (Until that lands in the published image, build a server image
 # from this branch.)
-FROM ghcr.io/omnigent-ai/omnigent-server:latest
+FROM ghcr.io/z-57-z/gameops-agentic-framework-server:latest
 
 ARG SITE=/opt/venv/lib/python3.12/site-packages
 USER root

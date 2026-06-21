@@ -19,9 +19,9 @@ _DATABRICKSCFG_PATH = Path.home() / ".databrickscfg"
 # differs per distribution, and inlining it into the hint string would
 # make the line's width — and therefore its ruff formatting — depend on
 # which slug a checkout carries.
-_SOURCE_REPO_URL = "https://github.com/omnigent-ai/omnigent.git"
+_SOURCE_REPO_URL = "https://github.com/Z-57-z/gameops-agentic-framework.git"
 DATABRICKS_EXTRA_INSTALL_HINT = (
-    f'uv tool install --force "omnigent[databricks] @ git+{_SOURCE_REPO_URL}"'
+    f'uv tool install --force "gameops-agentic-framework[databricks] @ git+{_SOURCE_REPO_URL}"'
 )
 
 

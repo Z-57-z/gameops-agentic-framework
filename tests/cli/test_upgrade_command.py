@@ -30,7 +30,7 @@ def _git_install_info() -> _InstalledWheelInfo:
     return _InstalledWheelInfo(
         install_time_epoch=0.0,
         installer="uv",
-        vcs_url="git+https://github.com/omnigent-ai/omnigent.git",
+        vcs_url="git+https://github.com/Z-57-z/gameops-agentic-framework.git",
         commit_sha="a" * 40,
         is_editable=False,
         package_version="0.1.0",
@@ -482,7 +482,7 @@ def test_upgrade_git_install_repulls_and_verifies_commit(
     result = CliRunner().invoke(cli, ["upgrade"])
 
     assert result.exit_code == 0, result.output
-    assert ran == ["uv tool install --reinstall git+https://github.com/omnigent-ai/omnigent.git"]
+    assert ran == ["uv tool install --reinstall git+https://github.com/Z-57-z/gameops-agentic-framework.git"]
     assert "Updated to git bbbbbbbbb" in result.output
 
 

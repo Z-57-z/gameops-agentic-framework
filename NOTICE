@@ -2,6 +2,12 @@ Copyright (2026) Databricks, Inc.
 
 This Software includes software developed at Databricks (https://www.databricks.com/) and its use is subject to the included LICENSE file.
 
+GameOps Agentic Framework derivative notice
+
+This repository is a fork/derivative work prepared by Z-57-z for a GameOps-focused agentic framework project. It preserves the original Apache-2.0 license and notices from the upstream Omnigent project while changing the public project identity, repository target, package metadata, CLI name, and deployment references.
+
+________________
+
 ________________
 
 This Software contains code from the following open source projects, licensed under the Apache 2.0 license (https://www.apache.org/licenses/LICENSE-2.0):

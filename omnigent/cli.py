@@ -1071,10 +1071,10 @@ def _format_version() -> str:
 
     from omnigent.update_check import _read_build_info
 
-    version_str = importlib.metadata.version("omnigent")
+    version_str = importlib.metadata.version("gameops-agentic-framework")
     info = _read_build_info()
     if info is None:
-        return f"omnigent {version_str}"
+        return f"gameops-agent {version_str}"
     epoch, sha = info
     when = datetime.datetime.fromtimestamp(epoch, tz=datetime.timezone.utc).strftime(
         "%Y-%m-%dT%H:%M:%SZ"
@@ -1082,9 +1082,9 @@ def _format_version() -> str:
     if sha:
         # Short SHA (first 8 chars) — enough to disambiguate in bug
         # reports without making the line unwieldy.
-        return f"omnigent {version_str} ({sha[:8]}, built {when})"
+        return f"gameops-agent {version_str} ({sha[:8]}, built {when})"
     # _build_info exists but has no SHA (built without git available).
-    return f"omnigent {version_str} (built {when})"
+    return f"gameops-agent {version_str} (built {when})"
 
 
 def _print_version_callback(ctx: click.Context, _param: click.Parameter, value: bool) -> None:
@@ -1128,13 +1128,13 @@ class _OmnigentCLI(click.Group):
             import importlib.metadata
 
             try:
-                version = importlib.metadata.version("omnigent")
+                version = importlib.metadata.version("gameops-agentic-framework")
             except importlib.metadata.PackageNotFoundError:  # pragma: no cover
                 version = ""
-            epilogue = [("Get started", "omnigent setup")]
+            epilogue = [("Get started", "gameops-agent setup")]
             if version:
                 epilogue.insert(0, ("Version", version))
-            ui.print_landing(tagline="all your agents, one cli", epilogue=epilogue)
+            ui.print_landing(tagline="gameops agents, one framework", epilogue=epilogue)
         super().format_help(ctx, formatter)
 
 
@@ -1148,7 +1148,7 @@ class _OmnigentCLI(click.Group):
     help="Show the version and exit.",
 )
 def cli() -> None:
-    """Omnigent CLI."""
+    """GameOps Agentic Framework CLI."""
 
 
 # Names of every subcommand the click group owns. Used by
@@ -3606,7 +3606,7 @@ def upgrade(check_only: bool, force: bool, pre: bool) -> None:
     info = _read_installed_wheel_info()
     if info is None:
         raise click.ClickException(
-            "Couldn't determine how omnigent is installed; upgrade it manually."
+            "Couldn't determine how gameops-agentic-framework is installed; upgrade it manually."
         )
     if info.is_editable:
         raise click.ClickException(
@@ -3624,7 +3624,7 @@ def upgrade(check_only: bool, force: bool, pre: bool) -> None:
         _upgrade_vcs_install(info, check_only=check_only, force=force, pre=pre)
         return
 
-    current = importlib.metadata.version("omnigent")
+    current = importlib.metadata.version("gameops-agentic-framework")
     # User-initiated: a more forgiving timeout + one retry so a momentarily slow
     # mirror doesn't spuriously report the index as unreachable.
     latest = fetch_latest_version(
@@ -3636,7 +3636,7 @@ def upgrade(check_only: bool, force: bool, pre: bool) -> None:
             "connection (or OMNIGENT_INDEX_URL / your configured index) and try again."
         )
     if not _is_newer(latest, current):
-        click.echo(f"omnigent is up to date (v{current}).")
+        click.echo(f"gameops-agentic-framework is up to date (v{current}).")
         return
 
     click.echo(f"A new release is available: v{current} → v{latest}.")

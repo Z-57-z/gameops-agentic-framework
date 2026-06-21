@@ -5309,7 +5309,7 @@ def _build_github_issue_url(
     ]
 
     body = "\n".join(body_parts)
-    base = "https://github.com/omnigent-ai/omnigent/issues/new"
+    base = "https://github.com/Z-57-z/gameops-agentic-framework/issues/new"
     return (
         f"{base}"
         f"?title={quote('[Bug] TUI issue')}"
@@ -5401,7 +5401,7 @@ async def _cmd_report(
     session_id: str | None = session.session_id if hasattr(session, "session_id") else None
 
     try:
-        version = _pkg_version("omnigent")
+        version = _pkg_version("gameops-agentic-framework")
     except Exception:  # noqa: BLE001
         version = None
 

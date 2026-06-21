@@ -1,5 +1,5 @@
-# Build the `omnigent` release distributions (core wheel with the ap-web
-# UI bundled in, plus the `omnigent-client` and `omnigent-ui-sdk` SDK
+# Build the `gameops-agentic-framework` release distributions (core wheel with the ap-web
+# UI bundled in, plus the `gameops-agentic-client` and `gameops-agentic-ui-sdk` SDK
 # wheels it depends on), run the readiness gates, and publish all three to
 # (Test)PyPI via OIDC Trusted Publishing. The three version-lock together,
 # so every release publishes all three at the same version. Self-contained:
@@ -14,11 +14,11 @@
 #      the identical version to PyPI, behind the protected `pypi` env.
 #
 # One-time setup (per index, pypi.org AND test.pypi.org): Trusted Publishers
-# for all three project names pointing at omnigent-ai/omnigent +
-# release-omnigent.yml + the test-pypi/pypi environment (unclaimed names
+# for all three project names pointing at Z-57-z/gameops-agentic-framework +
+# release-gameops-agentic-framework.yml + the test-pypi/pypi environment (unclaimed names
 # reserved via a pending publisher); GitHub envs test-pypi (unprotected)
 # and pypi (required reviewer). Actions are SHA-pinned per repo convention.
-name: Release omnigent (PyPI)
+name: Release gameops-agentic-framework (PyPI)
 
 on:
   # PyPI publishing moved to the central secure-release repo; the tag-push
@@ -39,7 +39,7 @@ on:
   # steps are condition-gated off PR events.
   pull_request:
     paths:
-      - ".github/workflows/release-omnigent.yml"
+      - ".github/workflows/release-gameops-agentic-framework.yml"
 
 permissions:
   contents: read
@@ -47,13 +47,13 @@ permissions:
 
 # Serialize releases on the same ref so two triggers can't race the same tag.
 concurrency:
-  group: release-omnigent-${{ github.ref }}
+  group: release-gameops-agentic-framework-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   build-and-publish:
     # Gated to this repository; inert in forks and mirrors.
-    if: github.repository == 'omnigent-ai/omnigent'
+    if: github.repository == 'Z-57-z/gameops-agentic-framework'
     runs-on: ubuntu-latest
     # Bound a hung run under GitHub's 6-hour default (real work takes minutes).
     timeout-minutes: 30
@@ -104,9 +104,9 @@ jobs:
           # Every package carries the tag's version; every cross-package
           # dep is an exact `==tag` pin (the lockstep contract).
           packages = {
-              "pyproject.toml": ("omnigent-client", "omnigent-ui-sdk"),
-              "sdks/python-client/pyproject.toml": ("omnigent",),
-              "sdks/ui/pyproject.toml": ("omnigent-client",),
+              "pyproject.toml": ("gameops-agentic-client", "gameops-agentic-ui-sdk"),
+              "sdks/python-client/pyproject.toml": ("gameops-agentic-framework",),
+              "sdks/ui/pyproject.toml": ("gameops-agentic-client",),
           }
           errors = []
           for path, sibling_pins in packages.items():
@@ -148,9 +148,9 @@ jobs:
           import sys
           import zipfile
 
-          whls = sorted(glob.glob("dist/omnigent-*.whl"))
+          whls = sorted(glob.glob("dist/gameops_agentic_framework-*.whl"))
           if not whls:
-              sys.exit("no core omnigent wheel found in dist/")
+              sys.exit("no core gameops-agentic-framework wheel found in dist/")
           whl = whls[-1]
           names = zipfile.ZipFile(whl).namelist()
           ui = [n for n in names if "server/static/web-ui/" in n]
@@ -163,15 +163,15 @@ jobs:
       #    resolving deps from public PyPI (catches proxy-only deps).
       - name: Smoke-install the built wheels
         run: |
-          uv venv --python 3.12 /tmp/omnigent-smoke
-          uv pip install --python /tmp/omnigent-smoke/bin/python dist/*.whl
-          /tmp/omnigent-smoke/bin/omnigent --version
+          uv venv --python 3.12 /tmp/gameops-agentic-framework-smoke
+          uv pip install --python /tmp/gameops-agentic-framework-smoke/bin/python dist/*.whl
+          /tmp/gameops-agentic-framework-smoke/bin/gameops-agent --version
 
       # 7. Persist the built artifacts for inspection.
       - name: Upload built distributions
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: dist-omnigent
+          name: dist-gameops-agentic-framework
           path: dist/
 
       # PUBLISH via OIDC Trusted Publishing (no token; id-token: write granted

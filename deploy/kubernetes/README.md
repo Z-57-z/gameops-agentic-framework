@@ -11,7 +11,7 @@ port-forward` (see [Verify the deployment](#verify-the-deployment)).
 ## What gets provisioned
 
 - **Deployment** — single-replica pod running
-  `ghcr.io/omnigent-ai/omnigent-server`, served on port 8000.
+  `ghcr.io/z-57-z/gameops-agentic-framework-server`, served on port 8000.
 - **Service** — ClusterIP on port 80 → 8000.
 - **Ingress** *(optional)* — serves the app over HTTPS at a public web address,
   using cert-manager for the certificate. Skip it if the server isn't going on

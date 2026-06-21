@@ -51,9 +51,9 @@ async def test_version_returns_installed_package_version(
     # fetchVersion() falls back to "unknown" in every bug report.
     assert "version" in body
 
-    expected = _pkg_version("omnigent")
+    expected = _pkg_version("gameops-agentic-framework")
     # Exact match against the installed version — confirms the endpoint
-    # calls importlib.metadata.version("omnigent"), not a constant.
+    # calls importlib.metadata.version("gameops-agentic-framework"), not a constant.
     assert body["version"] == expected, (
         f"Expected version {expected!r} from importlib.metadata, "
         f"got {body['version']!r}. If the handler hard-codes a version, "

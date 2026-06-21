@@ -1,7 +1,7 @@
 # Builds + pushes two images to GHCR via GITHUB_TOKEN: the server image
-# (ghcr.io/omnigent-ai/omnigent-server, referenced by every deploy template)
+# (ghcr.io/z-57-z/gameops-agentic-framework-server, referenced by every deploy template)
 # and the host image (the `host` target of the same Dockerfile,
-# ghcr.io/omnigent-ai/omnigent-host — default for `sandbox create --provider
+# ghcr.io/z-57-z/gameops-agentic-framework-host — default for `sandbox create --provider
 # modal` and server-launched managed hosts). Dockerfile ARGs default to public
 # registries, so no build-args needed.
 #
@@ -76,7 +76,7 @@ jobs:
     # Gated to this repository; inert in forks and mirrors. Skip the (re)build
     # on schedule, force_nightly, and reconcile_floating dispatches — those only
     # drive the promote-nightly / reconcile-floating jobs.
-    if: github.repository == 'omnigent-ai/omnigent' && github.event_name != 'schedule' && !inputs.force_nightly && !inputs.reconcile_floating
+    if: github.repository == 'Z-57-z/gameops-agentic-framework' && github.event_name != 'schedule' && !inputs.force_nightly && !inputs.reconcile_floating
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -111,8 +111,8 @@ jobs:
           BUMP_LATEST: ${{ inputs.bump_latest }}
         run: |
           set -euo pipefail
-          IMAGE="ghcr.io/omnigent-ai/omnigent-server"
-          HOST_IMAGE="ghcr.io/omnigent-ai/omnigent-host"
+          IMAGE="ghcr.io/z-57-z/gameops-agentic-framework-server"
+          HOST_IMAGE="ghcr.io/z-57-z/gameops-agentic-framework-host"
           SHORT_SHA=$(git rev-parse --short HEAD)
 
           # Immutable per-commit pin, always.
@@ -221,14 +221,14 @@ jobs:
       - name: Generate server SBOM
         run: |
           set -euo pipefail
-          syft "ghcr.io/omnigent-ai/omnigent-server@${{ needs.build-and-push.outputs.server-digest }}" \
+          syft "ghcr.io/z-57-z/gameops-agentic-framework-server@${{ needs.build-and-push.outputs.server-digest }}" \
             -o cyclonedx-json=server-sbom.cdx.json \
             -o spdx-json=server-sbom.spdx.json
 
       - name: Generate host SBOM
         run: |
           set -euo pipefail
-          syft "ghcr.io/omnigent-ai/omnigent-host@${{ needs.build-and-push.outputs.host-digest }}" \
+          syft "ghcr.io/z-57-z/gameops-agentic-framework-host@${{ needs.build-and-push.outputs.host-digest }}" \
             -o cyclonedx-json=host-sbom.cdx.json \
             -o spdx-json=host-sbom.spdx.json
 
@@ -247,7 +247,7 @@ jobs:
     # Daily cron (or a manual force_nightly dispatch): move :latest-nightly to
     # the current main build by retagging :latest-dev with `crane tag`
     # (digest-preserving, no rebuild).
-    if: github.repository == 'omnigent-ai/omnigent' && (github.event_name == 'schedule' || inputs.force_nightly)
+    if: github.repository == 'Z-57-z/gameops-agentic-framework' && (github.event_name == 'schedule' || inputs.force_nightly)
     permissions:
       contents: read
       packages: write # retag within GHCR via GITHUB_TOKEN
@@ -271,7 +271,7 @@ jobs:
           set -euo pipefail
           # crane tag points a new tag at an EXISTING manifest digest without
           # re-serializing it, so :latest-nightly keeps :latest-dev's exact digest.
-          for img in ghcr.io/omnigent-ai/omnigent-server ghcr.io/omnigent-ai/omnigent-host; do
+          for img in ghcr.io/z-57-z/gameops-agentic-framework-server ghcr.io/z-57-z/gameops-agentic-framework-host; do
             if crane digest "${img}:latest-dev" >/dev/null 2>&1; then
               crane tag "${img}:latest-dev" latest-nightly
               echo "promoted ${img}:latest-dev -> :latest-nightly ($(crane digest "${img}:latest-nightly"))"
@@ -286,7 +286,7 @@ jobs:
     # from the tag list with PEP 440 ordering. Retags with `crane tag`
     # (digest-preserving). Idempotent — also a "fix the floating tags if they drift"
     # button, and the way to backfill them for releases cut before this scheme.
-    if: github.repository == 'omnigent-ai/omnigent' && inputs.reconcile_floating
+    if: github.repository == 'Z-57-z/gameops-agentic-framework' && inputs.reconcile_floating
     permissions:
       contents: read
       packages: write # retag within GHCR via GITHUB_TOKEN
@@ -342,7 +342,7 @@ jobs:
             fi
           }
 
-          for img in ghcr.io/omnigent-ai/omnigent-server ghcr.io/omnigent-ai/omnigent-host; do
+          for img in ghcr.io/z-57-z/gameops-agentic-framework-server ghcr.io/z-57-z/gameops-agentic-framework-host; do
             retag "${img}" "latest-rc" "${RC_TAG}"
             retag "${img}" "latest" "${LATEST_TAG}"
           done

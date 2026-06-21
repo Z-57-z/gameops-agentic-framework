@@ -35,7 +35,7 @@ permissions:
 jobs:
   draft-release:
     # Inert in forks / mirrors — only the canonical repo should cut releases.
-    if: github.repository == 'omnigent-ai/omnigent'
+    if: github.repository == 'Z-57-z/gameops-agentic-framework'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

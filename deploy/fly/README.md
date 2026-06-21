@@ -9,7 +9,7 @@ persistent volume, and serves it over HTTPS on `*.fly.dev`.
 
 ## What gets provisioned
 
-- **omnigent** — a machine that pulls `ghcr.io/omnigent-ai/omnigent-server`,
+- **omnigent** — a machine that pulls `ghcr.io/z-57-z/gameops-agentic-framework-server`,
   served on `https://<app>.fly.dev`.
 - **artifact_data** — a persistent volume mounted at `/data/artifacts`, holding
   the artifact store, the minted cookie secret, and (by default) the SQLite
@@ -55,7 +55,7 @@ no "deploy this external image" mode, so the default `[build] image = ...`
   dockerfile = "deploy/docker/Dockerfile.prebuilt"
 ```
 
-The shim is `FROM ghcr.io/omnigent-ai/omnigent-server` with nothing added, so
+The shim is `FROM ghcr.io/z-57-z/gameops-agentic-framework-server` with nothing added, so
 Fly **pulls the prebuilt image and re-tags it** — no source rebuild. Launch
 still won't auto-create the `artifact_data` volume or bump memory, so create
 the volume (above) and confirm 1 GB after Launch finishes.

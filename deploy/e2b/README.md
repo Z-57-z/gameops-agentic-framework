@@ -13,7 +13,7 @@ running Omnigent hosts, two ways:
 > [!IMPORTANT]
 > **E2B boots from a pre-built *template*, not a registry image.** Unlike
 > the Modal / Daytona / CoreWeave launchers — which pull
-> `ghcr.io/omnigent-ai/omnigent-host` directly — E2B cannot start an
+> `ghcr.io/z-57-z/gameops-agentic-framework-host` directly — E2B cannot start an
 > arbitrary registry image at create time. You must first build the
 > Omnigent host image into an E2B template (a one-time step, below); the
 > launcher's `template` field then names *that template*, not a
@@ -61,7 +61,7 @@ cat > e2b.Dockerfile <<'EOF'
 # Single-stage, Debian-based — both E2B requirements. The host image
 # already bakes the full omnigent install plus git / tmux / curl, so
 # nothing else is needed here.
-FROM ghcr.io/omnigent-ai/omnigent-host:latest
+FROM ghcr.io/z-57-z/gameops-agentic-framework-host:latest
 EOF
 
 e2b template build --name omnigent-host --dockerfile e2b.Dockerfile
