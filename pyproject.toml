@@ -219,10 +219,11 @@ dev = [
 ]
 
 [project.scripts]
-# Public CLI entry point for GameOps Agentic Framework. The internal Python
-# package namespace remains `omnigent` during this fork rename to keep the
-# existing runtime and tests compatible.
+# Public CLI entry points for GameOps Agentic Framework. Keep `omnigent` as a
+# compatibility alias because e2e helpers and existing users still invoke it,
+# while `gameops-agent` is the branded command for this fork.
 gameops-agent = "omnigent.cli:main"
+omnigent = "omnigent.cli:main"
 
 # uv path-deps for the sibling SDK packages (renamed in Stage 3).
 [tool.uv.sources]

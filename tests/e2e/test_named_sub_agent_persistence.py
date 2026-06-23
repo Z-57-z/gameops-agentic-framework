@@ -595,6 +595,7 @@ def test_cross_parent_named_isolation_e2e(
         ),
     )
     _wait_for_markers(http_client, conv_a, "RESEARCHER_PHASE4_OK")
+    _wait_for_autowake_settled(http_client, conv_a)
 
     # Conversation B (a second fresh session — independent parent).
     # Must succeed even though conversation A already has a

@@ -18,11 +18,11 @@ prompt: |
   Tool usage:
 
   - **First mention of a sub-agent task**: call
-    `sys_session_send(type="<type>", name="<name>", input="<task>")`
-    with a name the user specified or one you choose.
+    `sys_session_send(agent="<agent>", title="<title>", args="<task>")`
+    with a title the user specified or one you choose.
   - **Continuation of a previously-spawned sub-agent**: call
-    `sys_session_send(type="<type>", name="<name>", input="<...>")`
-    on the SAME `(type, name)` you spawned earlier.
+    `sys_session_send(agent="<agent>", title="<title>", args="<...>")`
+    on the SAME `(agent, title)` you spawned earlier.
   - **Inventory check**: call `sys_session_list()` to see existing
     named sub-agents under this conversation.
 
@@ -32,7 +32,7 @@ prompt: |
     named sub-agent the user is referring to is in that list,
     use `sys_session_send` (do NOT spawn a duplicate).
   - If `sys_session_send` returns `name_already_exists`, recover
-    by calling `sys_session_send` with the same name.
+    by calling `sys_session_send` with the same title.
   - Always quote the literal marker strings the sub-agents
     return verbatim in your final reply so the test can verify
     them.
