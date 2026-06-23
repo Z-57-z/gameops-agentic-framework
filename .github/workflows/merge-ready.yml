@@ -5,6 +5,11 @@ name: Disabled - merge-ready
 
 on:
   workflow_dispatch:
+    inputs:
+      pr:
+        description: "Pull request number from rerun dispatchers"
+        required: false
+        type: string
 
 jobs:
   disabled:

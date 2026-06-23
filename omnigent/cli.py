@@ -1074,7 +1074,7 @@ def _format_version() -> str:
     version_str = importlib.metadata.version("gameops-agentic-framework")
     info = _read_build_info()
     if info is None:
-        return f"gameops-agent {version_str}"
+        return f"omnigent {version_str}"
     epoch, sha = info
     when = datetime.datetime.fromtimestamp(epoch, tz=datetime.timezone.utc).strftime(
         "%Y-%m-%dT%H:%M:%SZ"
@@ -1082,9 +1082,9 @@ def _format_version() -> str:
     if sha:
         # Short SHA (first 8 chars) — enough to disambiguate in bug
         # reports without making the line unwieldy.
-        return f"gameops-agent {version_str} ({sha[:8]}, built {when})"
+        return f"omnigent {version_str} ({sha[:8]}, built {when})"
     # _build_info exists but has no SHA (built without git available).
-    return f"gameops-agent {version_str} (built {when})"
+    return f"omnigent {version_str} (built {when})"
 
 
 def _print_version_callback(ctx: click.Context, _param: click.Parameter, value: bool) -> None:

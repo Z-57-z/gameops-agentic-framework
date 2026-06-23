@@ -285,4 +285,7 @@ jobs:
             exit 0
           fi
           echo "Re-dispatching merge-ready.yml for PR #$PR after $GITHUB_WORKFLOW."
-          gh workflow run merge-ready.yml --repo "$REPO" -f pr="$PR"
+          # The public-fork merge-ready workflow is intentionally disabled and
+          # accepts no required inputs on the default branch. Dispatch it
+          # without fields so rerun jobs don't fail schema validation with 422.
+          gh workflow run merge-ready.yml --repo "$REPO"
