@@ -18,3 +18,13 @@ dependencies = [
     "prompt_toolkit>=3",
     "pyyaml>=6.0,<7",
 ]
+
+[tool.hatch.build.targets.wheel]
+packages = ["omnigent_ui_sdk"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/omnigent_ui_sdk",
+    "/README.md",
+    "/pyproject.toml",
+]
