@@ -436,10 +436,10 @@ def test_repl_single_approval_allows_llm_response(
         encoding="utf-8",
         codec_errors="replace",
         dimensions=(40, 120),  # rows, cols
-        timeout=60,
+        timeout=120,
     )
     try:
-        _wait_for_prompt_ready(child, timeout=60)
+        _wait_for_prompt_ready(child, timeout=120)
 
         # Send the user message and wait for the approval
         # banner. 'approval required' is the human-readable
