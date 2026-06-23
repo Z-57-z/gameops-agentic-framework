@@ -51,6 +51,7 @@ from __future__ import annotations
 
 import json
 import time
+import uuid
 from pathlib import Path
 
 import httpx
@@ -60,6 +61,7 @@ from tests.e2e.conftest import (
     configure_mock_llm,
     create_runner_bound_session,
     poll_session_until_terminal,
+    register_inline_agent,
     reset_mock_llm,
     send_user_message_to_session,
     upload_agent,
@@ -206,6 +208,66 @@ def named_sub_agent_test_agent(
         rewrite_model_for_databricks=databricks_workspace_host is not None,
         databricks_profile=databricks_profile_or_none,
     )
+
+
+@pytest.fixture
+def cross_parent_named_agent(
+    http_client: httpx.Client,
+    mock_llm_server_url: str,
+) -> tuple[str, str, str]:
+    """Register a cross-parent isolation agent with keyed mock queues.
+
+    The static fixture uses the legacy ``gpt-5.4`` model and therefore
+    falls back to the mock server's shared ``default`` queue in mock-only
+    CI. This test needs two top-level conversations plus an async child
+    and auto-wake per conversation, so sharing one FIFO queue lets parent,
+    child, and wake turns consume each other's slots. Registering an
+    inline parent and child with unique model names gives each role its
+    own deterministic mock queue.
+
+    :returns: ``(parent_name, parent_model, researcher_model)``.
+    """
+    uid = uuid.uuid4().hex[:6]
+    parent_model = f"mock-named-parent-{uid}"
+    researcher_model = f"mock-named-researcher-{uid}"
+    mock_base = f"{mock_llm_server_url}/v1"
+
+    parent_name = register_inline_agent(
+        http_client,
+        name=f"named-cross-parent-{uid}",
+        harness="openai-agents",
+        model=parent_model,
+        profile="",
+        prompt=(
+            "You are the named-sub-agent cross-parent E2E fixture parent. "
+            "Dispatch the researcher sub-agent via sys_session_send and "
+            "quote the literal marker string it returns."
+        ),
+        mock_llm_base_url=mock_base,
+        extra_config={
+            "tools": {
+                "researcher": {
+                    "type": "agent",
+                    "description": "Test-fixture researcher. Returns RESEARCHER_PHASE4_OK.",
+                    "executor": {
+                        "harness": "openai-agents",
+                        "model": researcher_model,
+                        "auth": {
+                            "type": "api_key",
+                            "api_key": "mock-key",
+                            "base_url": mock_base,
+                        },
+                    },
+                    "prompt": (
+                        "You are the test-fixture researcher sub-agent. "
+                        "Whatever the user asks, include RESEARCHER_PHASE4_OK "
+                        "verbatim in your response."
+                    ),
+                },
+            },
+        },
+    )
+    return parent_name, parent_model, researcher_model
 
 
 def _run_turn(
@@ -532,7 +594,7 @@ def test_parallel_named_sub_agents_e2e(
 
 def test_cross_parent_named_isolation_e2e(
     http_client: httpx.Client,
-    named_sub_agent_test_agent: str,
+    cross_parent_named_agent: tuple[str, str, str],
     live_runner_id: str,
     mock_llm_server_url: str,
 ) -> None:
@@ -541,9 +603,12 @@ def test_cross_parent_named_isolation_e2e(
     conversations: both spawns succeed, neither sees the other's
     history. The partial unique index is per-parent.
     """
+    parent_name, parent_model, researcher_model = cross_parent_named_agent
     reset_mock_llm(mock_llm_server_url)
-    # Two sequential spawn flows — 4 responses per conv (tool_call +
-    # text after tool result + child + auto-wake) = 8 total.
+    # Parent and child turns must use separate queues. When all eight
+    # responses lived on the shared "default" queue, the async child turn
+    # could consume the parent's next slot (or vice versa) before the
+    # marker reached the parent session in CI.
     configure_mock_llm(
         mock_llm_server_url,
         [
@@ -559,8 +624,6 @@ def test_cross_parent_named_isolation_e2e(
             },
             # Conv A: parent after tool result
             {"text": "Dispatched researcher for project A."},
-            # Conv A: child responds
-            {"text": "Project A auth. RESEARCHER_PHASE4_OK"},
             # Conv A: parent auto-wake
             {"text": "Researcher returned: RESEARCHER_PHASE4_OK"},
             # Conv B: parent dispatches
@@ -575,19 +638,27 @@ def test_cross_parent_named_isolation_e2e(
             },
             # Conv B: parent after tool result
             {"text": "Dispatched researcher for project B."},
-            # Conv B: child responds
-            {"text": "Project B auth. RESEARCHER_PHASE4_OK"},
             # Conv B: parent auto-wake
             {"text": "Researcher returned: RESEARCHER_PHASE4_OK"},
         ],
-        key="default",
+        key=parent_model,
+    )
+    configure_mock_llm(
+        mock_llm_server_url,
+        [
+            # Conv A: child responds
+            {"text": "Project A auth. RESEARCHER_PHASE4_OK"},
+            # Conv B: child responds
+            {"text": "Project B auth. RESEARCHER_PHASE4_OK"},
+        ],
+        key=researcher_model,
     )
 
     # Conversation A (fresh session).
     _r_a, conv_a = _run_turn(
         http_client,
         runner_id=live_runner_id,
-        agent_name=named_sub_agent_test_agent,
+        agent_name=parent_name,
         user_text=(
             "Spawn the researcher sub-agent named 'auth' with "
             "input 'Authentication strategies for project A'. "
@@ -603,7 +674,7 @@ def test_cross_parent_named_isolation_e2e(
     _r_b, conv_b = _run_turn(
         http_client,
         runner_id=live_runner_id,
-        agent_name=named_sub_agent_test_agent,
+        agent_name=parent_name,
         user_text=(
             "Spawn the researcher sub-agent named 'auth' with "
             "input 'Authentication strategies for project B'. "
