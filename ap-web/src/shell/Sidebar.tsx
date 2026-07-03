@@ -28,6 +28,7 @@ import {
   ShareIcon,
   SquareIcon,
   SquareCheckIcon,
+  TerminalIcon,
   Trash2Icon,
   XIcon,
 } from "lucide-react";
@@ -134,6 +135,7 @@ function useActiveNavItem(): { isNewChatPage: boolean; isInboxPage: boolean } {
  *     to stay visible while they switch around.
  */
 export function Sidebar({ open, onClose }: SidebarProps) {
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [pinnedConversationIds, setPinnedConversationIds] = useState(readPinnedConversationIds);
@@ -205,6 +207,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
   // Which top-level nav button to highlight for the current route.
   const { isNewChatPage, isInboxPage } = useActiveNavItem();
+  const isGameOpsConsolePage =
+    location.pathname === "/" || location.pathname === "" || location.pathname.endsWith("/gameops");
 
   // Sync pinned ids to localStorage whenever state changes. Keeping
   // the write here (instead of inside the state updater) preserves the
@@ -226,7 +230,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
   return (
     <aside
-      aria-label="Conversations"
+      aria-label="会话"
       className={cn(
         // Base: bg + flex column. No transition — expand/collapse snaps
         // instantly (animating the width also lagged drag-to-resize).
@@ -262,7 +266,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       data-collapsed={!open || undefined}
       // Match the keyboard-focus story: when closed, the sidebar's
       // children shouldn't receive tabs.
-      inert={!open}
+      inert={open ? undefined : true}
     >
       {/* Right-edge resize handle (desktop only), mirroring the right rail's
           left-edge handle. Hidden on mobile, where the sidebar is a
@@ -284,7 +288,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           onClick={onNavClick}
           className="rounded-sm text-[15px] font-semibold tracking-tight text-foreground transition-colors hover:text-foreground/70"
         >
-          Omnigent
+          GameOps
         </Link>
         <div className="flex items-center gap-1">
           <ThemeModeMenu />
@@ -294,7 +298,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label="Close sidebar"
+                aria-label="关闭侧边栏"
                 onClick={onClose}
                 className="rounded-full"
               >
@@ -306,7 +310,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             </TooltipTrigger>
             {/* Bottom placement keeps the tooltip clear of the macOS
                 Electron shell's traffic lights at the window's top edge. */}
-            <TooltipContent side="bottom">Collapse sidebar</TooltipContent>
+            <TooltipContent side="bottom">收起侧边栏</TooltipContent>
           </Tooltip>
         </div>
       </div>
@@ -327,7 +331,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         >
           <Link to="/" onClick={onNavClick}>
             <PencilIcon className="size-4 text-muted-foreground" />
-            New session
+            GameOps 智能运营助手
           </Link>
         </Button>
         <Button
@@ -341,12 +345,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         >
           <Link to="/inbox" onClick={onNavClick}>
             <InboxIcon className="size-4" />
-            Inbox
+            待处理
             {inboxCount > 0 && (
               <span
-                aria-label={
-                  inboxCount === 1 ? "1 inbox item waiting" : `${inboxCount} inbox items waiting`
-                }
+                aria-label={inboxCount === 1 ? "1 个待处理事项" : `${inboxCount} 个待处理事项`}
                 className="ml-auto inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-warning/15 px-1.5 text-[11px] font-medium text-warning tabular-nums"
               >
                 {inboxCount}
@@ -354,63 +356,68 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             )}
           </Link>
         </Button>
-        {selectionMode ? (
-          <BulkActionBar
-            selectedIds={selectedIds}
-            allConversations={(conversationsQuery.data?.pages ?? []).flatMap((page) => page.data)}
-            onSelectAll={() =>
-              selectAll((conversationsQuery.data?.pages ?? []).flatMap((page) => page.data))
-            }
-            onDeselectAll={deselectAll}
-            onClear={deselectAll}
-            onExit={exitSelectionMode}
-          />
-        ) : (
-          <div className="relative mt-3 flex items-center gap-1.5">
-            <div className="relative flex-1">
-              <SearchIcon className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-2.5 size-3.5 text-muted-foreground" />
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                aria-label="Search sessions"
-                placeholder="Search sessions"
-                className="min-h-8 w-full rounded-full border border-input pr-3 pl-8 text-sm transition placeholder:text-muted-foreground focus-visible:outline-1"
-              />
+        {!isGameOpsConsolePage &&
+          (selectionMode ? (
+            <BulkActionBar
+              selectedIds={selectedIds}
+              allConversations={(conversationsQuery.data?.pages ?? []).flatMap((page) => page.data)}
+              onSelectAll={() =>
+                selectAll((conversationsQuery.data?.pages ?? []).flatMap((page) => page.data))
+              }
+              onDeselectAll={deselectAll}
+              onClear={deselectAll}
+              onExit={exitSelectionMode}
+            />
+          ) : (
+            <div className="relative mt-3 flex items-center gap-1.5">
+              <div className="relative flex-1">
+                <SearchIcon className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-2.5 size-3.5 text-muted-foreground" />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  aria-label="搜索会话"
+                  placeholder="搜索会话"
+                  className="min-h-8 w-full rounded-full border border-input pr-3 pl-8 text-sm transition placeholder:text-muted-foreground focus-visible:outline-1"
+                />
+              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="选择会话"
+                    data-testid="toggle-selection-mode"
+                    className="shrink-0 rounded-full"
+                    onClick={() => setSelectionMode(true)}
+                  >
+                    <ListChecksIcon className="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">选择会话</TooltipContent>
+              </Tooltip>
             </div>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label="Select sessions"
-                  data-testid="toggle-selection-mode"
-                  className="shrink-0 rounded-full"
-                  onClick={() => setSelectionMode(true)}
-                >
-                  <ListChecksIcon className="size-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">Select sessions</TooltipContent>
-            </Tooltip>
-          </div>
-        )}
+          ))}
       </div>
 
-      <nav className="relative flex-1 overflow-y-auto px-3 pb-3 [scrollbar-gutter:stable]">
-        <ConversationList
-          conversationsQuery={conversationsQuery}
-          onRowClick={onNavClick}
-          searchQuery={debouncedSearchQuery}
-          pinnedConversationIds={pinnedConversationIds}
-          onPinnedConversationIdsChange={setPinnedConversationIds}
-          onTogglePinned={togglePinnedConversation}
-          selectionMode={selectionMode}
-          selectedIds={selectedIds}
-          onToggleSelected={toggleSelected}
-        />
-      </nav>
+      {isGameOpsConsolePage ? (
+        <div className="flex-1" />
+      ) : (
+        <nav className="relative flex-1 overflow-y-auto px-3 pb-3 [scrollbar-gutter:stable]">
+          <ConversationList
+            conversationsQuery={conversationsQuery}
+            onRowClick={onNavClick}
+            searchQuery={debouncedSearchQuery}
+            pinnedConversationIds={pinnedConversationIds}
+            onPinnedConversationIdsChange={setPinnedConversationIds}
+            onTogglePinned={togglePinnedConversation}
+            selectionMode={selectionMode}
+            selectedIds={selectedIds}
+            onToggleSelected={toggleSelected}
+          />
+        </nav>
+      )}
 
       {/* Account footer. Sibling *after* the flex-1 nav so it pins to the
           bottom of the sidebar column. Renders nothing (no border, no
@@ -1026,7 +1033,14 @@ function ConversationRow({
               <MoreHorizontalIcon className="size-3.5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-36">
+          <DropdownMenuContent align="end" className="min-w-40">
+            <DropdownMenuItem
+              data-testid="open-terminal-console"
+              onSelect={() => navigate(`/c/${conversation.id}/terminal`)}
+            >
+              <TerminalIcon className="size-3.5" />
+              Open terminal
+            </DropdownMenuItem>
             {isOwner ? (
               <DropdownMenuItem data-testid="archive-conversation" onSelect={runArchive}>
                 {isArchived ? (

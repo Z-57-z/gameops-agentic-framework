@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
-import { CheckIcon, Link2Icon, WandSparklesIcon } from "lucide-react";
+import { CheckIcon, Link2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useResizableCommentsPanel } from "@/hooks/useResizableCommentsPanel";
@@ -143,7 +143,7 @@ export function CommentsPanel({
             disabled={!canAddress || comments.length === 0 || addressPending}
             onClick={onAddressAll}
           >
-            <WandSparklesIcon className="size-3.5" />
+            <CheckIcon className="size-3.5" />
             Address All
           </Button>
         )}

@@ -123,7 +123,7 @@ const WAYPOINT_NODES = [
 const WAYPOINT_TRACE_PATHS = ["m10.2 6.3-3.9 3.9", "M7 12h10", "m15.7 17.7-3.9-3.9"] as const;
 
 /** Muted outline waypoints — the resting (off) face of the toggle. */
-function SparkleOutline() {
+function RouterOutline() {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -146,7 +146,7 @@ function SparkleOutline() {
  * Lit waypoints — solid-filled nodes with connector traces that stage in
  * just after the nodes land (see the `.imc-spark` delay in index.css).
  */
-function SparkleLit() {
+function RouterLit() {
   return (
     <svg viewBox="0 0 24 24" className="size-4" fill="none" aria-hidden="true">
       {WAYPOINT_NODES.map((n) => (
@@ -255,10 +255,10 @@ export function IntelligentModelControl({
               />
             )}
             <span className="imc-layer imc-layer-off" aria-hidden="true">
-              <SparkleOutline />
+              <RouterOutline />
             </span>
             <span className="imc-layer imc-layer-on" aria-hidden="true">
-              <SparkleLit />
+              <RouterLit />
             </span>
           </Button>
         </TooltipTrigger>

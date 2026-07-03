@@ -130,6 +130,20 @@ services:
       # so the operator's logs aren't cluttered with a URL they
       # can't click.
       OMNIGENT_ACCOUNTS_AUTO_OPEN: "${OMNIGENT_ACCOUNTS_AUTO_OPEN:-0}"
+
+      # ── BYO model API ───────────────────────────────────
+      # Users provide their own model API in .env. These values are
+      # passed to the server and forwarded to runners when needed.
+      LLM_PROVIDER: "${LLM_PROVIDER:-openai-compatible}"
+      LLM_MODEL: "${LLM_MODEL:-}"
+      LLM_BASE_URL: "${LLM_BASE_URL:-}"
+      LLM_API_KEY: "${LLM_API_KEY:-}"
+      OPENAI_MODEL: "${OPENAI_MODEL:-}"
+      OPENAI_BASE_URL: "${OPENAI_BASE_URL:-}"
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      ANTHROPIC_MODEL: "${ANTHROPIC_MODEL:-}"
+      ANTHROPIC_BASE_URL: "${ANTHROPIC_BASE_URL:-}"
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
     volumes:
       - artifact-data:/data
     ports:

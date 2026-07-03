@@ -6,13 +6,22 @@ import asyncio
 import contextvars
 import logging
 import os
-import resource
 import sys
 import time
 from collections import deque
 from dataclasses import dataclass
 from threading import Lock
 from typing import Protocol
+
+try:
+    import psutil as _psutil
+except ModuleNotFoundError:  # pragma: no cover - depends on optional install state.
+    _psutil = None
+
+try:
+    import resource as _resource
+except ModuleNotFoundError:  # pragma: no cover - Windows does not provide resource.
+    _resource = None
 
 from opentelemetry import metrics as otel_metrics
 from opentelemetry.util.types import Attributes
@@ -1009,12 +1018,14 @@ def _current_rss_bytes() -> int:
     """
     Return process resident memory in bytes.
 
-    Linux exposes current RSS in ``/proc/self/status``. Other
-    supported platforms fall back to ``resource.getrusage``; that
-    value is maximum resident set size, which is the best stdlib-only
+    Linux exposes current RSS in ``/proc/self/status``. Windows does
+    not ship the POSIX ``resource`` module, so it uses psutil when
+    available. Other POSIX platforms fall back to ``resource.getrusage``;
+    that value is maximum resident set size, which is the best stdlib-only
     option available on macOS.
 
-    :returns: Resident memory in bytes.
+    :returns: Resident memory in bytes, or ``0`` when the host exposes no
+        supported sampler.
     """
     proc_status = "/proc/self/status"
     try:
@@ -1027,7 +1038,16 @@ def _current_rss_bytes() -> int:
     except (FileNotFoundError, OSError, ValueError):
         pass
 
-    usage = resource.getrusage(resource.RUSAGE_SELF)
+    if _psutil is not None:
+        try:
+            return int(_psutil.Process(os.getpid()).memory_info().rss)
+        except Exception:
+            pass
+
+    if _resource is None:
+        return 0
+
+    usage = _resource.getrusage(_resource.RUSAGE_SELF)
     if sys.platform == "darwin":
         return int(usage.ru_maxrss)
     return int(usage.ru_maxrss) * 1024

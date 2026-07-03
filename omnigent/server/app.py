@@ -1,4 +1,4 @@
-"""FastAPI application — main entry point for the omnigent server."""
+"""FastAPI application 鈥?main entry point for the omnigent server."""
 
 import asyncio
 import logging
@@ -46,6 +46,7 @@ from omnigent.server.performance_metrics import (
 from omnigent.server.routes.builtin_agents import create_builtin_agents_router
 from omnigent.server.routes.comments import create_comments_router
 from omnigent.server.routes.default_policies import create_default_policies_router
+from omnigent.server.routes.gameops import create_gameops_router
 from omnigent.server.routes.policy_registry import create_policy_registry_router
 from omnigent.server.routes.runner_tunnel import create_runner_tunnel_router
 from omnigent.server.routes.session_policies import create_session_policies_router
@@ -204,7 +205,7 @@ def _normalize_tarinfo(tarinfo: tarfile.TarInfo) -> tarfile.TarInfo:
     Strip nondeterministic metadata from a tar member header.
 
     The built-in bundle builders tar a materialized directory whose
-    files carry install-time metadata — a fresh wheel install on each
+    files carry install-time metadata 鈥?a fresh wheel install on each
     deploy stamps new mtimes (and may differ in mode bits) even when
     the spec content is identical. Zeroing mtime/ownership and pinning
     a canonical mode makes the tarball a pure function of file paths +
@@ -270,20 +271,20 @@ def _ensure_builtin_agent(
     its ``bundle_location`` is content-addressed
     (``"{agent_id}/{sha256}"``):
 
-    - **No existing row** → create it.
-    - **Row exists, content hash differs** → store the new bundle and
+    - **No existing row** 鈫?create it.
+    - **Row exists, content hash differs** 鈫?store the new bundle and
       update the row in place (keeps the ``agent_id`` stable so task
       history isn't cascade-deleted; bumps ``version`` so the runner's
       version-keyed spec cache re-fetches), then warm-swap the cache.
-    - **Row exists, content hash matches** → evict the local cache so
+    - **Row exists, content hash matches** 鈫?evict the local cache so
       the next load re-fetches from ``bundle_location``, then return.
 
     The evict on the matching-hash path matters because
     :meth:`AgentCache.load` is keyed by ``agent_id`` and trusts its
     in-memory / on-disk entry without checking ``bundle_location``: a
     replica that boots with a cache lagging the (already-current) DB
-    row — or a prior boot whose ``replace`` failed after ``update``
-    succeeded — would otherwise keep serving the stale spec.
+    row 鈥?or a prior boot whose ``replace`` failed after ``update``
+    succeeded 鈥?would otherwise keep serving the stale spec.
 
     This replaces the old seed-once behavior, which skipped on row
     existence and so served a stale spec after the wheel shipped a new
@@ -362,8 +363,7 @@ def _ensure_default_agents(
 # to the packaged claude-native-ui / codex-native-ui / polly set. Each
 # ``os.pathsep``-separated entry is a path to an agent spec (single-file
 # YAML or a bundle dir); it is registered as a built-in (``session_id NULL``)
-# under the spec path's stem (file) or directory name. Lets a deployment —
-# or an e2e fixture — ship custom always-available agents (e.g. a plain
+# under the spec path's stem (file) or directory name. Lets a deployment 鈥?# or an e2e fixture 鈥?ship custom always-available agents (e.g. a plain
 # claude-sdk chat agent that a fork can switch into).
 _EXTRA_BUILTIN_AGENTS_ENV = "OMNIGENT_BUILTIN_AGENT_DIRS"
 
@@ -384,7 +384,7 @@ def _ensure_extra_builtin_agents(
 
     Unlike the packaged ``_ensure_default_*`` helpers, this reads
     operator-supplied paths that may be wrong in a deployment (typo, stale
-    mount). A bad entry is logged and skipped — one misconfigured extra
+    mount). A bad entry is logged and skipped 鈥?one misconfigured extra
     agent must never block server startup (the packaged built-ins still
     seed). Mirrors the best-effort spec-load in :func:`_to_agent_object`.
 
@@ -631,7 +631,7 @@ def _ensure_default_debby_agent(
     picker can offer debby as a host-launchable card next to Claude
     Code, Codex, and polly. When the bundle is absent (generic
     deployment that didn't package it), seeding is skipped so no card
-    is offered for an agent that can't be launched here — same pattern
+    is offered for an agent that can't be launched here 鈥?same pattern
     as :func:`_ensure_default_polly_agent`. Content-aware via
     :func:`_ensure_builtin_agent`: when a new wheel ships a changed
     debby spec, the existing row is refreshed in place instead of
@@ -689,8 +689,8 @@ def _ensure_default_polly_agent(
     picker offer it as a host-launchable card next to Claude Code and
     Codex. When the bundle is absent (generic deployment that didn't
     package it), seeding is skipped so no card is offered for an agent
-    that can't be launched here — mirroring the ``_WEB_UI_DIST``
-    "asset present → enable feature" pattern. Content-aware via
+    that can't be launched here 鈥?mirroring the ``_WEB_UI_DIST``
+    "asset present 鈫?enable feature" pattern. Content-aware via
     :func:`_ensure_builtin_agent`: when a new wheel ships a changed
     polly spec, the existing row is refreshed in place instead of
     being ignored.
@@ -727,7 +727,7 @@ def create_app(
     permission_store: PermissionStore | None = None,
     auth_provider: AuthProvider | None = None,
     host_store: HostStore | None = None,
-    account_store: Any | None = None,  # SqlAlchemyAccountStore — accounts mode only
+    account_store: Any | None = None,  # SqlAlchemyAccountStore 鈥?accounts mode only
     extra_routers: list[tuple[Any, str, list[str]]] | None = None,
     policy_modules: list[str] | None = None,
     admins: list[str] | None = None,
@@ -764,7 +764,7 @@ def create_app(
     :param auth_provider: Pre-constructed auth provider for
         identity resolution. ``None`` disables auth (anonymous
         access). **Required** when ``permission_store`` is
-        provided — raises ``ValueError`` otherwise. Callers
+        provided 鈥?raises ``ValueError`` otherwise. Callers
         construct the provider via ``create_auth_provider()``
         or a custom implementation.
     :param host_store: Store for host registrations. ``None``
@@ -784,7 +784,7 @@ def create_app(
         Union'd with ``OMNIGENT_OIDC_ALLOWED_DOMAINS`` and the
         runtime-editable domains file.
     :param sandbox_config: Parsed ``sandbox:`` section of the server
-        config — which provider to provision managed hosts
+        config 鈥?which provider to provision managed hosts
         (``host_type="managed"`` sessions) from and the URL they dial
         back to. ``None`` disables managed hosts (a
         ``host_type="managed"`` create fails with a clear error).
@@ -800,13 +800,13 @@ def create_app(
     # First-boot admin bootstrap for the accounts auth provider.
     # Runs before any route is mounted so the login page is never
     # served against an empty user table (avoids the Immich-style
-    # land-grab race — see designs/oss-cuj/01-research-summary.md
-    # §2.2.1). Guarded on (a) accounts source active, (b)
+    # land-grab race 鈥?see designs/oss-cuj/01-research-summary.md
+    # 搂2.2.1). Guarded on (a) accounts source active, (b)
     # auth_provider wired in, and (c) account_store passed in.
     #
     # account_store is an EXPLICIT parameter (not constructed in
     # here) so the internal hosted product can opt out of accounts
-    # persistence entirely by passing None — even when it happens
+    # persistence entirely by passing None 鈥?even when it happens
     # to deploy with the accounts code on disk. Without this gate
     # the create_app factory would force every consumer to carry
     # an AccountStore, defeating the whole "accounts is opt-in"
@@ -863,7 +863,7 @@ def create_app(
         :class:`HarnessProcessManager` and stash it on
         ``app.state.harness_process_manager`` for workflow
         dispatch to use when routing through the harness contract
-        (see ``designs/SERVER_HARNESS_CONTRACT.md`` §Process
+        (see ``designs/SERVER_HARNESS_CONTRACT.md`` 搂Process
         management).
 
         On shutdown: shut down the harness process manager (which
@@ -871,12 +871,12 @@ def create_app(
         cleans up the per-AP-instance dir) and close every live
         tmux terminal in the :class:`TerminalRegistry`. Terminal
         cleanup is best-effort with per-instance timeouts; see
-        ``designs/OMNIGENT_TERMINAL_BRIDGE.md`` §4.4.
+        ``designs/OMNIGENT_TERMINAL_BRIDGE.md`` 搂4.4.
 
         :param app_inst: The FastAPI app, used to attach
             per-AP state via ``app_inst.state.*``.
         """
-        # Bump AnyIO default thread limiter from 40 → 200; every
+        # Bump AnyIO default thread limiter from 40 鈫?200; every
         # ``asyncio.to_thread`` and FastAPI sync route grabs one.
         from anyio import to_thread as _to_thread
 
@@ -902,7 +902,7 @@ def create_app(
         set_runner_router(runner_router)
 
         # Wake a blocked sub-agent's immediate parent: hooks
-        # ``pending_elicitations.record_publish`` to post a ``[System: …]``
+        # ``pending_elicitations.record_publish`` to post a ``[System: 鈥``
         # notice to the parent's ``/events``. Uninstalled at teardown so a
         # fresh app instance doesn't inherit a prior run's observer (matters
         # for multi-app test setups).
@@ -961,7 +961,7 @@ def create_app(
                     webbrowser.open(_bootstrap_result.open_url)
                 except Exception as exc:  # noqa: BLE001
                     _logger.warning(
-                        "accounts: auto-open browser failed (%s) — open the "
+                        "accounts: auto-open browser failed (%s) 鈥?open the "
                         "server URL in a browser instead",
                         exc,
                     )
@@ -981,7 +981,7 @@ def create_app(
             # Stop in-flight background managed-sandbox launches so a
             # slow provision doesn't outlive the ASGI shutdown (the
             # sandbox itself, if already provisioned, is reaped by the
-            # provider lifetime cap — see the hook's docstring).
+            # provider lifetime cap 鈥?see the hook's docstring).
             from omnigent.server.routes.sessions import cancel_managed_launch_tasks
 
             await cancel_managed_launch_tasks()
@@ -995,7 +995,7 @@ def create_app(
             await harness_pm.shutdown()
             await get_terminal_registry().shutdown()
             # Shut down all AP-side MCP connections opened by the proxy
-            # endpoint. Best-effort — individual close failures are logged
+            # endpoint. Best-effort 鈥?individual close failures are logged
             # inside shutdown_all().
             await _mcp_pool.shutdown_all()
 
@@ -1014,7 +1014,7 @@ def create_app(
     # Tracks in-flight background managed-host launches (POST
     # /v1/sessions returns before the sandbox exists) so a message
     # racing the provision can rendezvous instead of failing with
-    # "no runner bound". Always wired — cheap, and post_event probes
+    # "no runner bound". Always wired 鈥?cheap, and post_event probes
     # it regardless of whether managed hosts are configured.
     from omnigent.server.managed_hosts import ManagedLaunchTracker
 
@@ -1024,7 +1024,7 @@ def create_app(
     app.add_middleware(_WebSocketMetricsMiddleware, metrics=server_metrics)
     # CSWSH guard: reject cross-origin WebSocket handshakes before any
     # route accepts them. Added after the metrics middleware so it is the
-    # outermost WS middleware — a forbidden origin is closed without even
+    # outermost WS middleware 鈥?a forbidden origin is closed without even
     # reaching the metrics counter (which only counts on accept anyway).
     app.add_middleware(WebSocketOriginMiddleware)
     # Give the tool-policy ASK gate (which forwards the native-terminal
@@ -1078,13 +1078,13 @@ def create_app(
 
     @app.exception_handler(OmnigentError)
     async def _handle_omnigent_error(
-        request: Request,  # noqa: ARG001 — FastAPI exception-handler signature requires (request, exc); we only use exc
+        request: Request,  # noqa: ARG001 鈥?FastAPI exception-handler signature requires (request, exc); we only use exc
         exc: OmnigentError,
     ) -> JSONResponse:
         """
         Convert application errors to structured JSON responses.
 
-        :param request: The incoming request (unused — FastAPI signature requirement).
+        :param request: The incoming request (unused 鈥?FastAPI signature requirement).
         :param exc: The application error.
         :returns: A JSON response with the error code and message.
         """
@@ -1097,7 +1097,7 @@ def create_app(
 
     @app.exception_handler(Exception)
     async def _handle_unhandled_exception(
-        request: Request,  # noqa: ARG001 — FastAPI exception-handler signature requires (request, exc); we only use exc
+        request: Request,  # noqa: ARG001 鈥?FastAPI exception-handler signature requires (request, exc); we only use exc
         exc: Exception,
     ) -> JSONResponse:
         """
@@ -1105,7 +1105,7 @@ def create_app(
         OperationalError). Returns the standard JSON error schema
         so clients always get a consistent response format.
 
-        :param request: The incoming request (unused — FastAPI signature requirement).
+        :param request: The incoming request (unused 鈥?FastAPI signature requirement).
         :param exc: The unhandled exception.
         :returns: A 500 JSON response with ``internal_error`` code.
         """
@@ -1128,7 +1128,7 @@ def create_app(
         truth, written by the tunnel endpoint on connect/disconnect)
         rather than the per-replica :class:`HostRegistry`. If the host
         is connected to replica B and the request lands on replica A,
-        A's registry won't know about it — the DB will. Mirrors the
+        A's registry won't know about it 鈥?the DB will. Mirrors the
         same change made in ``routes/hosts.py`` for ``GET /v1/hosts``.
 
         When ``host_store`` was not supplied (host support not wired),
@@ -1180,7 +1180,7 @@ def create_app(
         :param sid: Session/conversation id, e.g. ``"conv_abc123"``.
         :returns: The :class:`SessionLiveness` pair for ``sid``. An id
             with no conversation row resolves to
-            ``runner_online=True`` (no runner ⇒ reachable) and
+            ``runner_online=True`` (no runner 鈬?reachable) and
             ``host_online=None`` (no host binding).
         """
         return _bulk_session_liveness([sid]).get(
@@ -1192,11 +1192,9 @@ def create_app(
         Bulk strict-liveness check with a fixed, small number of SQL
         queries.
 
-        Resolves every session's connectivity in two batch reads —
-        one over the conversations table (runner/host binding, via
+        Resolves every session's connectivity in two batch reads 鈥?        one over the conversations table (runner/host binding, via
         :meth:`ConversationStore.get_session_connectivity`) and one
-        over the hosts table (:meth:`HostStore.online_host_ids`) —
-        rather than the per-session ``get_conversation`` + per-host
+        over the hosts table (:meth:`HostStore.online_host_ids`) 鈥?        rather than the per-session ``get_conversation`` + per-host
         ``is_online`` fan-out the sidebar poll used to drive. That
         fan-out was ``O(n)`` synchronous Lakebase round-trips per
         ``/health`` call (~3 per offline session); for the sidebar's
@@ -1208,7 +1206,7 @@ def create_app(
         ``runner_online`` is **strict**: ``True`` iff a runner tunnel
         is currently registered for the session
         (:func:`_runner_up`). It deliberately does **not** fold in
-        host-relaunch optimism — a dead runner on a live host reads
+        host-relaunch optimism 鈥?a dead runner on a live host reads
         ``runner_online=False`` here, paired with ``host_online=True``
         so the open-session view can offer "send a message to wake
         the runner" without misreporting reachability. ``host_online``
@@ -1216,7 +1214,7 @@ def create_app(
         the session's ``host_id`` is online and fresh, ``False`` when
         a ``host_id`` is set but offline/stale, and ``None`` when the
         session has no ``host_id`` (CLI / local). Liveness is purely
-        "is the tunnel up / is the host fresh" — there is no longer a
+        "is the tunnel up / is the host fresh" 鈥?there is no longer a
         deliberate-stop marker that forces a session offline (Stop is
         non-sticky: it drops the runner tunnel, which is reflected here
         as ``runner_online=False``, and the next message relaunches on
@@ -1247,7 +1245,7 @@ def create_app(
         for sid in ids:
             conn = connectivity.get(sid)
             if conn is None:
-                # No conversation row — treat as reachable with no host
+                # No conversation row 鈥?treat as reachable with no host
                 # binding, matching the legacy single-session behavior.
                 result[sid] = SessionLiveness(runner_online=True, host_online=None)
                 continue
@@ -1257,7 +1255,7 @@ def create_app(
                 host_online = conn.host_id in online_hosts
             if conn.runner_id is None:
                 # No runner binding: an in-process executor (or a session
-                # not yet dispatched) is reachable — EXCEPT an unbound fork
+                # not yet dispatched) is reachable 鈥?EXCEPT an unbound fork
                 # of a session that had a working directory, which must
                 # rebind a host + directory first. Reporting it offline
                 # routes the first message into the directory picker instead
@@ -1265,7 +1263,7 @@ def create_app(
                 runner_online = not conn.needs_workspace
             else:
                 # Strict: reachable only if the runner tunnel is up. No
-                # host-relaunch optimism — host state lives in host_online.
+                # host-relaunch optimism 鈥?host state lives in host_online.
                 runner_online = _runner_up(conn)
             result[sid] = SessionLiveness(runner_online=runner_online, host_online=host_online)
         return result
@@ -1281,13 +1279,13 @@ def create_app(
         Without session params, returns ``{"status": "ok"}`` (bare
         liveness). With ``session_id``, adds a single ``session``
         object. With ``session_ids`` (comma-separated), adds a
-        ``sessions`` dict keyed by id — used by the sidebar to
+        ``sessions`` dict keyed by id 鈥?used by the sidebar to
         batch-check all visible sessions in one request. The batch
         path runs a single SQL ``IN`` query, not N per-id round-trips.
 
         Each per-session object carries both ``runner_online`` (strict
         runner reachability) and ``host_online`` (host tunnel live, or
-        ``None`` when the session has no host binding) — see
+        ``None`` when the session has no host binding) 鈥?see
         :class:`~omnigent.server.routes.sessions.SessionLiveness`.
 
         :param session_id: Optional single session id, e.g.
@@ -1348,13 +1346,13 @@ def create_app(
         return {"version": _pkg_version("gameops-agentic-framework")}
 
     @app.get("/v1/info")
-    async def info() -> dict[str, bool | str | None]:
+    async def info() -> dict[str, Any]:
         """Runtime capabilities probe for the SPA + CLI.
 
         Returned at app boot by the frontend (and by ``omnigent
         login`` when it needs to choose between flows). Drives
         conditional route registration and chrome on the SPA side
-        — when ``accounts_enabled`` is false, the SPA never
+        鈥?when ``accounts_enabled`` is false, the SPA never
         registers ``/login``, ``/register``, ``/members`` and
         never renders the AccountMenu, so the bundle behaves
         identically to a pre-PR-2008 build for header / OIDC
@@ -1363,7 +1361,7 @@ def create_app(
 
         Authentication: this endpoint is intentionally UNAUTHED
         so the SPA can probe it before holding a session cookie.
-        It exposes no sensitive state — only the active auth
+        It exposes no sensitive state 鈥?only the active auth
         source, the login URL, whether first-run admin setup is
         still pending (``needs_setup``), coarse capability
         booleans (``databricks_features``,
@@ -1381,14 +1379,14 @@ def create_app(
         # true only in accounts mode while no password-having account
         # exists yet. Same predicate bootstrap_admin uses, computed
         # live so it flips to false the instant /auth/setup (or any
-        # login) creates the first admin. Exposing it is safe — it's a
+        # login) creates the first admin. Exposing it is safe 鈥?it's a
         # boolean about whether setup is pending, not a secret.
         needs_setup = False
         if accounts_enabled and account_store is not None:
             needs_setup = not any(u.has_password for u in account_store.list_users())
         # databricks_features gates the Databricks-deployment-only UI hints
         # (the "Databricks Lakebox" connect tab). True only when the internal
-        # lakebox launcher module is present — it is excluded from the OSS
+        # lakebox launcher module is present 鈥?it is excluded from the OSS
         # export, so an OSS build reports False and the SPA shows the clean,
         # provider-agnostic hints. find_spec is side-effect-free (no import).
         import importlib.util
@@ -1399,7 +1397,7 @@ def create_app(
         # managed_sandboxes_enabled gates the web UI's sandbox
         # option on the new-session screen: true only when a `sandbox:`
         # config is wired AND its provider can actually serve a managed
-        # launch (staged providers parse but reject at launch — they
+        # launch (staged providers parse but reject at launch 鈥?they
         # must not advertise the option).
         managed_sandboxes_enabled = (
             sandbox_config is not None and sandbox_config.managed_launch_supported
@@ -1411,6 +1409,8 @@ def create_app(
         # actually offered; None when no provider is named (embedding
         # configs may leave it unset) so the UI keeps the generic label.
         sandbox_provider = sandbox_config.provider if managed_sandboxes_enabled else None
+        from omnigent.server.model_config import get_model_config_status
+
         return {
             "accounts_enabled": accounts_enabled,
             "login_url": login_url,
@@ -1418,6 +1418,7 @@ def create_app(
             "databricks_features": databricks_features,
             "managed_sandboxes_enabled": managed_sandboxes_enabled,
             "sandbox_provider": sandbox_provider,
+            "model_config": get_model_config_status().to_public_dict(),
         }
 
     @app.get("/v1/me", response_model=None)  # Union return type (dict | JSONResponse)
@@ -1447,6 +1448,8 @@ def create_app(
                 content={"user_id": None, "login_url": login_url},
             )
         return {"user_id": user_id}
+
+    app.include_router(create_gameops_router(), prefix="/v1", tags=["gameops"])
 
     app.include_router(
         create_sessions_router(
@@ -1535,7 +1538,7 @@ def create_app(
         tags=["policy_registry"],
     )
 
-    # ── Tunnel lifecycle callbacks (Step 8.5 crash recovery) ───
+    # 鈹€鈹€ Tunnel lifecycle callbacks (Step 8.5 crash recovery) 鈹€鈹€鈹€
     async def _on_runner_disconnect(runner_id: str) -> None:
         """Mark sessions pinned to *this* runner as offline.
 
@@ -1558,7 +1561,7 @@ def create_app(
         # listing path may be served from an eventually-consistent
         # search index in alternate store backends) and
         # O(sessions-on-this-runner) instead of a 500-row scan.
-        # Archived sessions are included by construction — an archived
+        # Archived sessions are included by construction 鈥?an archived
         # session can still be runner-bound, and skipping it here would
         # leave it stuck "running" forever.
         affected = [
@@ -1580,7 +1583,7 @@ def create_app(
         """Mark a crashed runner's session(s) failed and push the cause.
 
         Fired by the host tunnel when a daemon reports
-        ``host.runner_exited`` — the only failure signal for a runner
+        ``host.runner_exited`` 鈥?the only failure signal for a runner
         that died before connecting its tunnel (so ``_on_runner_disconnect``
         never fires for it). Mirrors that callback's by-runner lookup,
         but carries the daemon-composed error onto the ``session.status:
@@ -1630,7 +1633,7 @@ def create_app(
         # Direct by-runner lookup instead of list-everything-and-filter:
         # the listing path may be backed by an eventually-consistent
         # search index in alternate store backends, which cannot see a
-        # session created seconds ago — exactly the window this callback
+        # session created seconds ago 鈥?exactly the window this callback
         # runs in for a host-spawned runner. Missing the session here
         # means create_session never reaches the runner and the
         # claude-native terminal is never bootstrapped. Archived
@@ -1663,7 +1666,7 @@ def create_app(
                 # without one), so don't send a request it rejects by
                 # contract. The old list path filtered these rows out via
                 # has_agent_id=True; the by-runner lookup returns them, and
-                # the relay restart below still applies — the session is
+                # the relay restart below still applies 鈥?the session is
                 # runner-bound regardless of having an agent.
                 _logger.debug(
                     "_on_runner_connect: skipping session-init POST for %s (no agent_id)",
@@ -1691,7 +1694,7 @@ def create_app(
                 conversation_store,
             )
 
-    # WS tunnel endpoint for runners (RUNNER.md §2-3).
+    # WS tunnel endpoint for runners (RUNNER.md 搂2-3).
     app.include_router(
         create_runner_tunnel_router(
             tunnel_registry,
@@ -1753,7 +1756,7 @@ def create_app(
 
         # Admin roster: the config ``admins:`` list (canonical) union'd
         # with the runtime-editable ``<data_dir>/admins`` file. Consulted
-        # on each login to promote listed identities — the only admin
+        # on each login to promote listed identities 鈥?the only admin
         # path for OIDC, and an additive convenience for accounts. The
         # file portion lazily reloads on mtime change (no restart).
         admin_list = load_admin_list(extra=frozenset(admins or ()))
@@ -1779,8 +1782,7 @@ def create_app(
 
             # OIDC invites are opt-in (OMNIGENT_OIDC_ALLOW_INVITES) and
             # need the token/invited-email store. Construct one on the
-            # shared DB when enabled and the caller didn't pass one —
-            # OIDC deploys don't otherwise wire an account store.
+            # shared DB when enabled and the caller didn't pass one 鈥?            # OIDC deploys don't otherwise wire an account store.
             oidc_account_store = account_store
             _oidc_cfg = getattr(auth_provider, "_oidc_config", None)
             if (
@@ -1865,22 +1867,21 @@ class _SPAStaticFiles(StaticFiles):
     """``StaticFiles`` with an SPA history fallback.
 
     React Router's client-side routes (e.g. ``/c/abc123``) need to
-    survive a browser refresh — landing on them directly should return
+    survive a browser refresh 鈥?landing on them directly should return
     the SPA shell, which then boots and resolves the route on the
     client. Plain ``StaticFiles(html=True)`` only serves ``index.html``
     for the literal root and directory paths, so a refresh on
     ``/c/abc`` would 404.
 
     The fallback is gated by an extension check: a path with a file
-    extension (``.js``, ``.css``, ``.png``, ``.woff2``, …) is treated as
-    an asset request and a 404 is returned verbatim — that surfaces
+    extension (``.js``, ``.css``, ``.png``, ``.woff2``, 鈥? is treated as
+    an asset request and a 404 is returned verbatim 鈥?that surfaces
     real broken-asset bugs rather than masking them with the HTML
     shell. Extensionless paths fall back to ``index.html``.
     """
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        # The mount is at "/" so it catches *every* unmatched path —
-        # including WebSocket upgrades, which Starlette's StaticFiles
+        # The mount is at "/" so it catches *every* unmatched path 鈥?        # including WebSocket upgrades, which Starlette's StaticFiles
         # asserts against (raises ``AssertionError`` mid-handshake). A
         # WS request landing here means no router matched it (e.g. a
         # client targeting an endpoint that doesn't exist on this build
@@ -1964,3 +1965,4 @@ def _apply_web_ui_cache_headers(response: Response, path: str) -> Response:
     else:
         response.headers["Cache-Control"] = _WEB_UI_STATIC_CACHE_CONTROL
     return response
+

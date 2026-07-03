@@ -207,6 +207,22 @@ _RUNNER_ENV_ALLOWLIST: frozenset[str] = frozenset(
         "LOGNAME",
         "SHELL",
         "TMPDIR",
+        "TMP",
+        "TEMP",
+        # Windows process/runtime essentials. CPython on Windows can fail before
+        # user code runs (for example importing asyncio/_overlapped) when the
+        # environment is stripped of SystemRoot/WINDIR, and common tools rely on
+        # ComSpec/PATHEXT and the per-user app-data dirs.
+        "SystemRoot",
+        "SYSTEMROOT",
+        "WINDIR",
+        "windir",
+        "ComSpec",
+        "COMSPEC",
+        "PATHEXT",
+        "USERPROFILE",
+        "APPDATA",
+        "LOCALAPPDATA",
         "TZ",
         "TERM",
         "TERMINFO",
@@ -287,12 +303,13 @@ _RUNNER_ENV_ALLOWLIST: frozenset[str] = frozenset(
 # Locale family (``LC_ALL``, ``LC_CTYPE``, …) — allowed by prefix.
 _RUNNER_ENV_ALLOWLIST_PREFIXES: tuple[str, ...] = ("LC_", "MLFLOW_", "OTEL_")
 
-# Harness credential / endpoint env vars forwarded host→runner when
+# Harness credential / endpoint / model env vars forwarded host→runner when
 # present. These are the names the harnesses themselves resolve —
 # ANTHROPIC_* for claude-sdk / pi (claude-code also honors
 # ANTHROPIC_AUTH_TOKEN + ANTHROPIC_BASE_URL for gateways, and
 # CLAUDE_CODE_OAUTH_TOKEN for `claude setup-token` subscription auth),
-# OPENAI_* for codex / openai-agents (CODEX_ACCESS_TOKEN is the codex
+# OPENAI_* plus HARNESS_*_MODEL for codex / openai-agents / claude-sdk
+# model pinning (CODEX_ACCESS_TOKEN is the codex
 # CLI's headless ChatGPT-workspace credential, minted in the ChatGPT
 # admin console — Business/Enterprise plans), GEMINI_API_KEY for the
 # gemini family. GIT_TOKEN / GIT_USERNAME feed the sandbox host
@@ -314,6 +331,8 @@ HARNESS_CREDENTIAL_ENV_VARS: frozenset[str] = frozenset(
         "OPENAI_API_KEY",
         "OPENAI_BASE_URL",
         "GEMINI_API_KEY",
+        "HARNESS_OPENAI_AGENTS_MODEL",
+        "HARNESS_CLAUDE_SDK_MODEL",
         "GIT_TOKEN",
         "GIT_USERNAME",
     }
@@ -1432,9 +1451,9 @@ class HostProcess:
         # otherwise the terminal goes silent after auth and there's no
         # signal the WS handshake actually completed.
         print(
-            f"✓ Connected as {self._identity.name!r} "
+            f"[ok] Connected as {self._identity.name!r} "
             f"({self._identity.host_id}), {len(hello.runners)} live runner(s). "
-            "Listening for sessions — Ctrl-C to disconnect.",
+            "Listening for sessions - Ctrl-C to disconnect.",
             flush=True,
         )
 

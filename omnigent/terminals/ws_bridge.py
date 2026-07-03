@@ -30,20 +30,26 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import fcntl
 import json
 import logging
 import os
-import pty
 import shutil
 import signal
 import struct
-import termios
 import time
 import weakref
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Final
+
+try:
+    import fcntl
+    import pty
+    import termios
+except ModuleNotFoundError:  # pragma: no cover - Windows has no POSIX PTY APIs.
+    fcntl = None
+    pty = None
+    termios = None
 
 from fastapi import WebSocket, WebSocketDisconnect
 
@@ -178,6 +184,8 @@ def _fork_exec_pty(tmux_path: str, argv: list[str], env: dict[str, str]) -> _Spa
     :raises OSError: If ``pty.fork`` fails in the parent (e.g. process
         or fd limits). Propagates to the caller to close the WS.
     """
+    if pty is None:
+        raise OSError("PTY fork is not supported on this platform")
     pid, master_fd = pty.fork()
     if pid == 0:
         # Child: replace the image with tmux. Never returns. ``execve``

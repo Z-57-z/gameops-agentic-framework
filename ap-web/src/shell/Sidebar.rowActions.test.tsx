@@ -88,7 +88,7 @@ function renderSidebar() {
   return render(
     <QueryClientProvider client={qc}>
       <TooltipProvider>
-        <MemoryRouter initialEntries={["/"]}>
+        <MemoryRouter initialEntries={["/chat"]}>
           <Sidebar open={true} onClose={vi.fn()} />
         </MemoryRouter>
       </TooltipProvider>
@@ -146,6 +146,16 @@ describe("quick pin/unpin hover button", () => {
     // — pinning now lives only on the hover/quick button.
     expect(screen.getByTestId("rename-conversation")).toBeInTheDocument();
     expect(screen.queryByTestId("pin-conversation")).toBeNull();
+  });
+
+  it("offers a direct terminal console deep link from the kebab menu", () => {
+    renderSidebar();
+
+    fireEvent.pointerDown(screen.getByTestId("conversation-actions"), { button: 0 });
+
+    const item = screen.getByTestId("open-terminal-console");
+    expect(item).toHaveTextContent("Open terminal");
+    expect(item).toBeInTheDocument();
   });
 });
 

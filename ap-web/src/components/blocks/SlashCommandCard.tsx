@@ -10,7 +10,7 @@
 //             conversation state (effort level, context reset,
 //             compaction, model swap), so a web observer needs them.
 
-import { ChevronRightIcon, CommandIcon, WandSparklesIcon, type LucideIcon } from "lucide-react";
+import { ChevronRightIcon, CommandIcon, GitBranchIcon, type LucideIcon } from "lucide-react";
 import { useMemo } from "react";
 import { CodeBlock, CodeBlockHeader, CodeBlockTitle } from "@/components/ai-elements/code-block";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -28,7 +28,7 @@ const KIND_STYLES: Record<SlashCommandKind, KindStyle> = {
     prefix: "Skill",
     // WandSparkles, not Sparkles — plain Sparkles is the thinking/reasoning
     // marker (ai-elements/reasoning), and skills must not look like thoughts.
-    Icon: WandSparklesIcon,
+    Icon: GitBranchIcon,
     // Brand pink — matches the composer slash-command tint and the nessie
     // workflow chips so every skill surface shares one palette.
     iconClass: "text-brand-accent",

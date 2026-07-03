@@ -45,6 +45,23 @@ _RELATIVE_CWD_PLACEHOLDERS: frozenset[str] = frozenset({"", ".", "./"})
 _STAT_TIMEOUT_S: float = 5.0
 
 
+def is_absolute_host_path(path: str) -> bool:
+    """
+    Return whether *path* is absolute on the host platform.
+
+    The server may validate a Windows host from a non-Windows process, so
+    this check intentionally accepts both POSIX roots and Windows drive /
+    UNC roots instead of relying on the server's own ``os.path`` rules.
+
+    :param path: Workspace path supplied by the client, e.g.
+        ``"/Users/corey/repo"`` or ``"C:\\Users\\corey\\repo"``.
+    :returns: ``True`` when the path is syntactically absolute.
+    """
+    if path.startswith("/") or path.startswith("\\\\"):
+        return True
+    return len(path) >= 3 and path[0].isalpha() and path[1] == ":" and path[2] in ("/", "\\")
+
+
 class WorkspaceValidationError(Exception):
     """
     Raised when a workspace pick fails one of the validation steps.
@@ -214,11 +231,12 @@ async def validate_workspace(
         The exception message is suitable for surfacing to the
         API caller verbatim.
     """
-    if not workspace.startswith("/"):
-        # Belt-and-suspenders. The Pydantic schema layer also
-        # rejects this; pin it here so direct callers (tests,
-        # other server-internal paths) can't bypass.
-        raise WorkspaceValidationError("workspace must be an absolute path starting with /")
+    if not is_absolute_host_path(workspace):
+        # Belt-and-suspenders. The route layer also rejects this; pin it
+        # here so direct callers (tests, other server-internal paths)
+        # can't bypass. Accept Windows absolute paths because the host,
+        # not the server, is authoritative for path syntax.
+        raise WorkspaceValidationError("workspace must be an absolute host path")
 
     display_host = host_name_for_errors or host_id
 

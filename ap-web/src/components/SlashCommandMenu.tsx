@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { CommandIcon, WandSparklesIcon } from "lucide-react";
+import { CommandIcon, GitBranchIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -80,10 +80,8 @@ function MenuRowButton({
   onSelect: (cmd: string) => void;
 }) {
   const isBuiltin = row.name in BUILTIN_SLASH_COMMANDS;
-  // Wand in pink for skills (per design feedback — distinct from the
-  // info-blue slash-command tint, and from plain Sparkles which marks
-  // thinking/reasoning blocks), the ⌘ glyph in slate for built-ins.
-  const Icon = isBuiltin ? CommandIcon : WandSparklesIcon;
+  // Branch glyph for skills, distinct from built-in slash commands.
+  const Icon = isBuiltin ? CommandIcon : GitBranchIcon;
   return (
     <button
       type="button"
@@ -100,7 +98,7 @@ function MenuRowButton({
       <Icon
         className={cn(
           "size-3.5 shrink-0",
-          isBuiltin ? "text-slate-500 dark:text-slate-400" : "text-pink-500 dark:text-pink-400",
+          isBuiltin ? "text-slate-500 dark:text-slate-400" : "text-brand-accent",
         )}
       />
       <span className="truncate">{row.name}</span>

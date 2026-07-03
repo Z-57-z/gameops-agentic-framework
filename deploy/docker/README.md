@@ -14,6 +14,17 @@ below). There is no separate auth-proxy container.
 
 ## Quickstart (single-user)
 
+For the portfolio/local-app experience from a fresh GitHub clone, prefer the root Compose stack:
+
+```bash
+cd ../..
+cp .env.example .env                    # add your own model API settings
+docker compose up --build               # server + Postgres + host/runner container
+open http://localhost:8080
+```
+
+This `deploy/docker` stack remains the server + Postgres deployment template for external-runner mode:
+
 ```bash
 cd deploy/docker
 ./bootstrap.sh                          # mints POSTGRES_PASSWORD + cookie secret into .env

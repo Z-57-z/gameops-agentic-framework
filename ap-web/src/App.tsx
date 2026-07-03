@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 import { ChatPage } from "@/pages/ChatPage";
+import { GameOpsPage } from "@/pages/GameOpsPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { useServerInfo } from "@/lib/CapabilitiesContext";
 import { AppShell } from "@/shell/AppShell";
@@ -9,7 +10,7 @@ import { AppShell } from "@/shell/AppShell";
 // deploy ships (where accounts is off) doesn't include them in the
 // main entry chunk. They're separate chunks that only download
 // when the user actually navigates to /login, /register, /members
-// — which never happens in non-accounts deploys because the route
+// 鈥?which never happens in non-accounts deploys because the route
 // table below doesn't register them.
 const LoginPage = lazy(() => import("@/pages/LoginPage").then((m) => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() =>
@@ -26,6 +27,9 @@ const ApprovePage = lazy(() =>
   import("@/pages/ApprovePage").then((m) => ({ default: m.ApprovePage })),
 );
 const InboxPage = lazy(() => import("@/pages/InboxPage").then((m) => ({ default: m.InboxPage })));
+const AgentTerminalPage = lazy(() =>
+  import("@/pages/AgentTerminalPage").then((m) => ({ default: m.AgentTerminalPage })),
+);
 
 interface AppProps {
   /**
@@ -35,7 +39,7 @@ interface AppProps {
    * Why not rely on descendant-route prefix stripping? When embedded, ap-web's
    * `<Routes>` uses the host's externalized react-router instance, but the host
    * mounts via `@databricks/web-shared/routing`, whose internal react-router
-   * may be a DIFFERENT physical module — so the parent route-match context that
+   * may be a DIFFERENT physical module 鈥?so the parent route-match context that
    * normally rebases descendant routes isn't reliably visible here. Matching
    * the absolute pathname removes that dependency. Standalone passes no
    * basename (BrowserRouter handles the root) and matches relatively (`prefix`
@@ -45,7 +49,7 @@ interface AppProps {
 }
 
 /**
- * The route table. AppShell is the parent layout-route — it renders
+ * The route table. AppShell is the parent layout-route 鈥?it renders
  * the sidebar + a main `<Outlet />` and every child route's content
  * lands in that outlet.
  *
@@ -59,15 +63,15 @@ interface AppProps {
  *
  * **Accounts routes are CONDITIONAL** on the ``/v1/info`` probe
  * (see ``main.tsx`` + ``lib/CapabilitiesContext.tsx``). When
- * ``accounts_enabled`` is false — every header / OIDC deploy,
+ * ``accounts_enabled`` is false 鈥?every header / OIDC deploy,
  * including the internal hosted product that syncs from this repo
- * — ``/login`` / ``/register`` / ``/members`` are NOT in the route
+ * 鈥?``/login`` / ``/register`` / ``/members`` are NOT in the route
  * table at all. Navigating to any of those paths lands on
  * ``<NotFoundPage />``. The bundle still ships those components as
  * separate chunks (via ``React.lazy``) but they're never downloaded.
  *
  * ``/login`` and ``/register`` sit OUTSIDE the AppShell tree on
- * purpose — the shell loads sidebar / conversations / runner health
+ * purpose 鈥?the shell loads sidebar / conversations / runner health
  * hooks which require an authed identity; mounting them on an
  * unauthed page is at best wasted fetches, at worst an infinite
  * loop with ``identity.ts``'s 401 redirect. Both pages own their
@@ -84,7 +88,7 @@ function App({ basename }: AppProps = {}) {
   // the original relative route table.
   const prefix = basename ?? "";
   const info = useServerInfo();
-  // While the probe is in flight, render nothing — first paint is
+  // While the probe is in flight, render nothing 鈥?first paint is
   // ~30ms after boot anyway, and flashing the chrome we may
   // immediately tear down once the probe returns is worse than a
   // tiny blank moment.
@@ -94,7 +98,7 @@ function App({ basename }: AppProps = {}) {
   // the Create-admin form so the first visitor lands on it no matter how
   // they arrived (root, a bookmarked deep link, /login). The form's
   // /auth/setup is server-gated to the zero-admin state, and needs_setup
-  // flips false the instant it succeeds — so this whole branch disappears
+  // flips false the instant it succeeds 鈥?so this whole branch disappears
   // after the first admin exists.
   if (info.accounts_enabled && info.needs_setup) {
     return (
@@ -117,8 +121,10 @@ function App({ basename }: AppProps = {}) {
         )}
         <Route path={`${prefix}/approve/:sessionId/:elicitationId`} element={<ApprovePage />} />
         <Route element={<AppShell />}>
-          <Route path={prefix || "/"} element={<ChatPage />} />
+          <Route path={prefix || "/"} element={<GameOpsPage />} />
+          <Route path={`${prefix}/chat`} element={<ChatPage />} />
           <Route path={`${prefix}/c/:conversationId`} element={<ChatPage />} />
+          <Route path={`${prefix}/c/:conversationId/terminal`} element={<AgentTerminalPage />} />
           <Route path={`${prefix}/inbox`} element={<InboxPage />} />
           {info.accounts_enabled && (
             <>

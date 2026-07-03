@@ -21,6 +21,16 @@
 import { hostFetch } from "./host";
 
 /** Shape of the response from ``GET /v1/info``. */
+export interface ModelConfigStatus {
+  provider: string;
+  model: string | null;
+  base_url: string | null;
+  base_url_host: string | null;
+  configured: boolean;
+  credential_source: string | null;
+  message: string;
+}
+
 export interface ServerInfo {
   accounts_enabled: boolean;
   login_url: string | null;
@@ -56,9 +66,20 @@ export interface ServerInfo {
    * ``managed_sandboxes_enabled`` is true.
    */
   sandbox_provider: string | null;
+  model_config: ModelConfigStatus;
 }
 
 /** Sentinel used when the probe fails — accounts is off, no login URL. */
+export const UNCONFIGURED_MODEL_CONFIG: ModelConfigStatus = {
+  provider: "openai-compatible",
+  model: null,
+  base_url: null,
+  base_url_host: null,
+  configured: false,
+  credential_source: null,
+  message: "Model API is not configured.",
+};
+
 const _OFF: ServerInfo = {
   accounts_enabled: false,
   login_url: null,
@@ -66,6 +87,7 @@ const _OFF: ServerInfo = {
   databricks_features: false,
   managed_sandboxes_enabled: false,
   sandbox_provider: null,
+  model_config: UNCONFIGURED_MODEL_CONFIG,
 };
 
 let _cached: ServerInfo | null = null;
@@ -98,6 +120,7 @@ export async function resolveServerInfo(): Promise<ServerInfo> {
           managed_sandboxes_enabled: data.managed_sandboxes_enabled === true,
           sandbox_provider:
             typeof data.sandbox_provider === "string" ? data.sandbox_provider : null,
+          model_config: normalizeModelConfig(data.model_config),
         };
         return _cached;
       }
@@ -119,6 +142,21 @@ export async function resolveServerInfo(): Promise<ServerInfo> {
  * result (see ``CapabilitiesProvider`` in ``main.tsx``) rather
  * than calling this directly.
  */
+function normalizeModelConfig(value: unknown): ModelConfigStatus {
+  if (typeof value !== "object" || value === null) return UNCONFIGURED_MODEL_CONFIG;
+  const data = value as Partial<ModelConfigStatus>;
+  return {
+    provider:
+      typeof data.provider === "string" ? data.provider : UNCONFIGURED_MODEL_CONFIG.provider,
+    model: typeof data.model === "string" ? data.model : null,
+    base_url: typeof data.base_url === "string" ? data.base_url : null,
+    base_url_host: typeof data.base_url_host === "string" ? data.base_url_host : null,
+    configured: data.configured === true,
+    credential_source: typeof data.credential_source === "string" ? data.credential_source : null,
+    message: typeof data.message === "string" ? data.message : UNCONFIGURED_MODEL_CONFIG.message,
+  };
+}
+
 export function getCachedServerInfo(): ServerInfo | null {
   return _cached;
 }

@@ -1,0 +1,135 @@
+# Local one-command GameOps Agentic Framework app.
+#
+# Usage:
+#   cp .env.example .env
+#   docker compose up --build
+#   open http://localhost:8080
+#
+# The server and the host/runner process are separated into containers. The
+# host image contains Linux tmux/PTY tooling, so terminal sessions run inside
+# Docker instead of directly on Windows/macOS/Linux hosts.
+
+name: gameops-agentic-local
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-gameops}
+      POSTGRES_USER: ${POSTGRES_USER:-gameops}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gameops-local-password}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gameops} -d ${POSTGRES_DB:-gameops}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
+      args:
+        PYPI_INDEX_URL: ${PYPI_INDEX_URL:-https://pypi.org/simple}
+        NPM_CONFIG_REGISTRY: ${NPM_CONFIG_REGISTRY:-}
+        HTTP_PROXY: ${HTTP_PROXY:-}
+        HTTPS_PROXY: ${HTTPS_PROXY:-}
+        NO_PROXY: ${NO_PROXY:-localhost,127.0.0.1,host.docker.internal,server,postgres}
+        http_proxy: ${HTTP_PROXY:-}
+        https_proxy: ${HTTPS_PROXY:-}
+        no_proxy: ${NO_PROXY:-localhost,127.0.0.1,host.docker.internal,server,postgres}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-gameops}:${POSTGRES_PASSWORD:-gameops-local-password}@postgres:5432/${POSTGRES_DB:-gameops}
+      ARTIFACT_DIR: /data/artifacts
+      HOST: 0.0.0.0
+      PORT: "8000"
+      OMNIGENT_AUTH_ENABLED: ${OMNIGENT_AUTH_ENABLED:-0}
+      OMNIGENT_AUTH_PROVIDER: ${OMNIGENT_AUTH_PROVIDER:-}
+      OMNIGENT_LOCAL_SINGLE_USER: "1"
+      OMNIGENT_ACCOUNTS_AUTO_OPEN: "0"
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai-compatible}
+      LLM_MODEL: ${LLM_MODEL:-}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-}
+      ANTHROPIC_BASE_URL: ${ANTHROPIC_BASE_URL:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    volumes:
+      - app-data:/data
+    ports:
+      - "8080:8000"
+
+  host:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
+      target: host
+      args:
+        PYPI_INDEX_URL: ${PYPI_INDEX_URL:-https://pypi.org/simple}
+        NPM_CONFIG_REGISTRY: ${NPM_CONFIG_REGISTRY:-}
+        HTTP_PROXY: ${HTTP_PROXY:-}
+        HTTPS_PROXY: ${HTTPS_PROXY:-}
+        NO_PROXY: ${NO_PROXY:-localhost,127.0.0.1,host.docker.internal,server,postgres}
+        http_proxy: ${HTTP_PROXY:-}
+        https_proxy: ${HTTPS_PROXY:-}
+        no_proxy: ${NO_PROXY:-localhost,127.0.0.1,host.docker.internal,server,postgres}
+    restart: unless-stopped
+    depends_on:
+      - server
+    command:
+      - /bin/sh
+      - -lc
+      - |
+        case "$${LLM_PROVIDER:-openai-compatible}" in
+          anthropic|claude)
+            export ANTHROPIC_MODEL="$${ANTHROPIC_MODEL:-$$LLM_MODEL}"
+            export ANTHROPIC_BASE_URL="$${ANTHROPIC_BASE_URL:-$$LLM_BASE_URL}"
+            export ANTHROPIC_API_KEY="$${ANTHROPIC_API_KEY:-$$LLM_API_KEY}"
+            export HARNESS_CLAUDE_SDK_MODEL="$${HARNESS_CLAUDE_SDK_MODEL:-$${ANTHROPIC_MODEL:-$$LLM_MODEL}}"
+            export OMNIGENT_RUNNER_ENV_PASSTHROUGH="$${OMNIGENT_RUNNER_ENV_PASSTHROUGH:+$$OMNIGENT_RUNNER_ENV_PASSTHROUGH,}HARNESS_CLAUDE_SDK_MODEL"
+            ;;
+          *)
+            export OPENAI_MODEL="$${OPENAI_MODEL:-$$LLM_MODEL}"
+            export OPENAI_BASE_URL="$${OPENAI_BASE_URL:-$$LLM_BASE_URL}"
+            export OPENAI_API_KEY="$${OPENAI_API_KEY:-$$LLM_API_KEY}"
+            export HARNESS_OPENAI_AGENTS_MODEL="$${HARNESS_OPENAI_AGENTS_MODEL:-$${OPENAI_MODEL:-$$LLM_MODEL}}"
+            export OMNIGENT_RUNNER_ENV_PASSTHROUGH="$${OMNIGENT_RUNNER_ENV_PASSTHROUGH:+$$OMNIGENT_RUNNER_ENV_PASSTHROUGH,}HARNESS_OPENAI_AGENTS_MODEL"
+            ;;
+        esac
+        exec omnigent host --server http://server:8000
+    environment:
+      OMNIGENT_AUTH_ENABLED: ${OMNIGENT_AUTH_ENABLED:-0}
+      OMNIGENT_AUTH_PROVIDER: ${OMNIGENT_AUTH_PROVIDER:-}
+      OMNIGENT_LOCAL_SINGLE_USER: "1"
+      OMNIGENT_CONFIG_HOME: /data/config
+      OMNIGENT_DATA_DIR: /data/state
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai-compatible}
+      LLM_MODEL: ${LLM_MODEL:-}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      HARNESS_OPENAI_AGENTS_MODEL: ${HARNESS_OPENAI_AGENTS_MODEL:-}
+      HARNESS_CLAUDE_SDK_MODEL: ${HARNESS_CLAUDE_SDK_MODEL:-}
+      OMNIGENT_RUNNER_ENV_PASSTHROUGH: ${OMNIGENT_RUNNER_ENV_PASSTHROUGH:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-}
+      ANTHROPIC_BASE_URL: ${ANTHROPIC_BASE_URL:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    volumes:
+      - host-data:/data
+      - ./workspace:/workspace
+
+volumes:
+  postgres-data:
+  app-data:
+  host-data:

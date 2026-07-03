@@ -92,10 +92,10 @@ function formatSessionCostUsd(costUsd: number): string {
  * render in full so they aren't misleadingly rounded.
  */
 function formatTokenCount(tokens: number): string {
-  return new Intl.NumberFormat(undefined, {
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(tokens);
+  if (tokens < 1000) return String(tokens);
+  if (tokens < 1_000_000) return `${Number((tokens / 1000).toFixed(1))}K`;
+  if (tokens < 1_000_000_000) return `${Number((tokens / 1_000_000).toFixed(1))}M`;
+  return `${Number((tokens / 1_000_000_000).toFixed(1))}B`;
 }
 
 /**

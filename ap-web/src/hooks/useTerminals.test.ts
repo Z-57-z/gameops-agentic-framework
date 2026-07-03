@@ -16,6 +16,7 @@ import {
   inventoryTerminals,
   isAgentTerminalKey,
   PENDING_RECONCILE_INTERVAL_MS,
+  selectPreferredTerminal,
   terminalInfoFromResource,
   terminalsReconcileInterval,
   terminalTabKey,
@@ -530,6 +531,33 @@ describe("inventoryTerminals", () => {
     // A regular session never hosts an agent terminal; an id collision
     // (agent-declared "tui"/"main") must not be hidden.
     expect(inventoryTerminals([repl, bash], false)).toEqual([repl, bash]);
+  });
+});
+
+describe("selectPreferredTerminal", () => {
+  const agent: TerminalInfo = {
+    id: "terminal_claude_main",
+    name: "claude",
+    session: "main",
+    running: true,
+  };
+  const shell: TerminalInfo = {
+    id: "terminal_bash_s1",
+    name: "bash",
+    session: "s1",
+    running: true,
+  };
+
+  it("prefers the agent terminal when one is present", () => {
+    expect(selectPreferredTerminal([shell, agent])).toEqual({ terminal: agent, kind: "agent" });
+  });
+
+  it("falls back to the first user shell when no agent terminal exists", () => {
+    expect(selectPreferredTerminal([shell])).toEqual({ terminal: shell, kind: "shell" });
+  });
+
+  it("returns none for an empty terminal list", () => {
+    expect(selectPreferredTerminal([])).toEqual({ terminal: null, kind: "none" });
   });
 });
 
