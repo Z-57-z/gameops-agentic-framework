@@ -1062,6 +1062,12 @@ def _pid_alive(pid: int) -> bool:
         # PID exists but we can't signal it — for the orphan
         # sweep's purposes that means "live, leave alone."
         return True
+    except OSError:
+        # Windows can raise OSError (for example WinError 87) for a
+        # pid probe even when the integer came from a stale POSIX-style
+        # pid file. Treat that as not alive so startup cleanup remains
+        # best-effort instead of aborting the server.
+        return False
     return True
 
 

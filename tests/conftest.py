@@ -71,7 +71,7 @@ def _load_known_failures() -> dict[str, dict[str, Any]]:
     """Map nodeid -> entry from `tests/known_failures.yaml`."""
     if not _KNOWN_FAILURES_PATH.exists():
         return {}
-    data = yaml.safe_load(_KNOWN_FAILURES_PATH.read_text()) or {}
+    data = yaml.safe_load(_KNOWN_FAILURES_PATH.read_text(encoding="utf-8")) or {}
     return {entry["id"]: entry for entry in (data.get("skips") or [])}
 
 

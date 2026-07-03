@@ -15,7 +15,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AccountMenu } from "./AccountMenu";
 import type { CurrentAccount } from "@/lib/accountsApi";
-import type { ServerInfo } from "@/lib/capabilities";
+import { UNCONFIGURED_MODEL_CONFIG, type ServerInfo } from "@/lib/capabilities";
 import * as accountsApi from "@/lib/accountsApi";
 import { useServerInfo } from "@/lib/CapabilitiesContext";
 
@@ -33,6 +33,7 @@ const ACCOUNTS_ON: ServerInfo = {
   databricks_features: false,
   managed_sandboxes_enabled: false,
   sandbox_provider: null,
+  model_config: UNCONFIGURED_MODEL_CONFIG,
 };
 const ACCOUNTS_OFF: ServerInfo = { ...ACCOUNTS_ON, accounts_enabled: false, login_url: null };
 

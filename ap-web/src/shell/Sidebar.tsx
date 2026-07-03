@@ -28,6 +28,7 @@ import {
   ShareIcon,
   SquareIcon,
   SquareCheckIcon,
+  TerminalIcon,
   Trash2Icon,
   XIcon,
 } from "lucide-react";
@@ -1026,7 +1027,14 @@ function ConversationRow({
               <MoreHorizontalIcon className="size-3.5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-36">
+          <DropdownMenuContent align="end" className="min-w-40">
+            <DropdownMenuItem
+              data-testid="open-terminal-console"
+              onSelect={() => navigate(`/c/${conversation.id}/terminal`)}
+            >
+              <TerminalIcon className="size-3.5" />
+              Open terminal
+            </DropdownMenuItem>
             {isOwner ? (
               <DropdownMenuItem data-testid="archive-conversation" onSelect={runArchive}>
                 {isArchived ? (

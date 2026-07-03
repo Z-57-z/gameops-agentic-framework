@@ -19,10 +19,15 @@ import shlex
 import shutil
 import signal
 import sys
-import termios
-import tty
 import uuid
 from collections.abc import Awaitable, Callable
+
+try:
+    import termios
+    import tty
+except ModuleNotFoundError:  # pragma: no cover - Windows has no POSIX raw TTY APIs.
+    termios = None
+    tty = None
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
@@ -4186,7 +4191,7 @@ def _enter_raw_mode(fd: int) -> list[Any] | None:
     :returns: Previous termios attributes, or ``None`` when *fd* is
         not a TTY.
     """
-    if not os.isatty(fd):
+    if not os.isatty(fd) or termios is None or tty is None:
         return None
     old_attrs = termios.tcgetattr(fd)
     tty.setraw(fd)
@@ -4202,7 +4207,7 @@ def _restore_terminal(fd: int, old_attrs: list[Any] | None) -> None:
         :func:`_enter_raw_mode`.
     :returns: None.
     """
-    if old_attrs is None:
+    if old_attrs is None or termios is None:
         return
     with contextlib.suppress(termios.error, OSError):
         termios.tcsetattr(fd, termios.TCSADRAIN, old_attrs)

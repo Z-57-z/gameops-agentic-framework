@@ -34,11 +34,19 @@ omnigent/_build_info.py
 run-ap-chat.sh
 run-omnigents.sh
 
+# Accidental in-repo virtualenvs created by `python -m venv .`.
+/bin/
+/lib/
+/lib64/
+pyvenv.cfg
+
 # direnv — contains secrets, never commit
 .envrc
 
 # Local env files (DB passwords, cookie secrets) created by
 # `bootstrap.sh` / `cp .env.example .env`. Only .env.example is tracked.
+!.env.example
+!**/.env.example
 .env
 **/.env
 

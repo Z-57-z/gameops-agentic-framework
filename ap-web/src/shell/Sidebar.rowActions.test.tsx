@@ -147,6 +147,16 @@ describe("quick pin/unpin hover button", () => {
     expect(screen.getByTestId("rename-conversation")).toBeInTheDocument();
     expect(screen.queryByTestId("pin-conversation")).toBeNull();
   });
+
+  it("offers a direct terminal console deep link from the kebab menu", () => {
+    renderSidebar();
+
+    fireEvent.pointerDown(screen.getByTestId("conversation-actions"), { button: 0 });
+
+    const item = screen.getByTestId("open-terminal-console");
+    expect(item).toHaveTextContent("Open terminal");
+    expect(item).toBeInTheDocument();
+  });
 });
 
 describe("double-click to rename", () => {

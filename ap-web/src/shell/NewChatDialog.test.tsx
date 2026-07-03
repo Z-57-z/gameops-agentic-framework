@@ -17,7 +17,7 @@ import {
   NewChatLandingScreen,
 } from "./NewChatDialog";
 import { CapabilitiesProvider } from "@/lib/CapabilitiesContext";
-import type { ServerInfo } from "@/lib/capabilities";
+import { UNCONFIGURED_MODEL_CONFIG, type ServerInfo } from "@/lib/capabilities";
 import { authenticatedFetch } from "@/lib/identity";
 import { useHosts, type Host } from "@/hooks/useHosts";
 import { useAvailableAgents, type AvailableAgent } from "@/hooks/useAvailableAgents";
@@ -544,6 +544,7 @@ function renderLanding(infoOverrides: Partial<ServerInfo> = {}) {
     databricks_features: false,
     managed_sandboxes_enabled: false,
     sandbox_provider: null,
+    model_config: UNCONFIGURED_MODEL_CONFIG,
     ...infoOverrides,
   };
   return render(
@@ -573,6 +574,32 @@ describe("NewChatLandingScreen", () => {
     // the placeholder, the composer input would be absent and this fails.
     expect(screen.getByText("What should we do?")).toBeTruthy();
     expect(screen.getByTestId("new-chat-landing-input")).toBeTruthy();
+  });
+
+  it("shows a non-secret model setup warning when BYO API is missing", () => {
+    renderLanding();
+    expect(screen.getByTestId("new-chat-landing-model-warning").textContent).toContain(
+      ".env.example",
+    );
+    expect(screen.queryByTestId("new-chat-landing-model-status")).toBeNull();
+  });
+
+  it("shows configured provider and model status without exposing credentials", () => {
+    renderLanding({
+      model_config: {
+        provider: "openai-compatible",
+        model: "deepseek-chat",
+        base_url: "https://api.deepseek.com/v1",
+        base_url_host: "api.deepseek.com",
+        configured: true,
+        credential_source: "env:LLM_API_KEY",
+        message: "OpenAI-compatible model API is configured.",
+      },
+    });
+    const status = screen.getByTestId("new-chat-landing-model-status");
+    expect(status.textContent).toContain("openai-compatible / deepseek-chat");
+    expect(status.textContent).toContain("api.deepseek.com");
+    expect(status.textContent).not.toContain("LLM_API_KEY");
   });
 
   it("enables submit only once a message, host, agent and valid workspace are set", async () => {

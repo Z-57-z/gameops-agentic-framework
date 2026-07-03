@@ -436,16 +436,23 @@ def _parent_process_is_alive(parent_pid: int) -> bool:
 def _parent_is_orphaned(parent_pid: int) -> bool:
     """Return whether this process has been orphaned by *parent_pid*.
 
-    The runner is launched as a direct child of ``parent_pid``, so
-    ``getppid()`` equals it until the parent dies — at which point the OS
-    reparents us to init / a subreaper and ``getppid()`` changes. That
-    reparent signal is immune to PID reuse, which can otherwise make the
-    ``os.kill(pid, 0)`` liveness probe succeed against an unrelated process
-    that recycled the dead parent's pid (seen on busy CI hosts).
+    The runner is launched as a direct child of ``parent_pid``, so on
+    POSIX ``getppid()`` equals it until the parent dies — at which point
+    the OS reparents us to init / a subreaper and ``getppid()`` changes.
+    That reparent signal is immune to PID reuse, which can otherwise make
+    the ``os.kill(pid, 0)`` liveness probe succeed against an unrelated
+    process that recycled the dead parent's pid (seen on busy CI hosts).
+
+    Windows does not provide the same stable POSIX reparenting semantics
+    for this guard in all launcher contexts, so use the liveness probe
+    there. Otherwise a live host can be misclassified as orphaned and the
+    runner exits cleanly before serving the session.
 
     :param parent_pid: The launcher's process id, e.g. ``12345``.
     :returns: ``True`` once the parent is gone, otherwise ``False``.
     """
+    if sys.platform == "win32":
+        return not _parent_process_is_alive(parent_pid)
     return os.getppid() != parent_pid or not _parent_process_is_alive(parent_pid)
 
 

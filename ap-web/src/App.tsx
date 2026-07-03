@@ -26,6 +26,9 @@ const ApprovePage = lazy(() =>
   import("@/pages/ApprovePage").then((m) => ({ default: m.ApprovePage })),
 );
 const InboxPage = lazy(() => import("@/pages/InboxPage").then((m) => ({ default: m.InboxPage })));
+const AgentTerminalPage = lazy(() =>
+  import("@/pages/AgentTerminalPage").then((m) => ({ default: m.AgentTerminalPage })),
+);
 
 interface AppProps {
   /**
@@ -119,6 +122,7 @@ function App({ basename }: AppProps = {}) {
         <Route element={<AppShell />}>
           <Route path={prefix || "/"} element={<ChatPage />} />
           <Route path={`${prefix}/c/:conversationId`} element={<ChatPage />} />
+          <Route path={`${prefix}/c/:conversationId/terminal`} element={<AgentTerminalPage />} />
           <Route path={`${prefix}/inbox`} element={<InboxPage />} />
           {info.accounts_enabled && (
             <>

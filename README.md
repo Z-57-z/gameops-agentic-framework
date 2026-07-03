@@ -27,7 +27,29 @@ This fork is prepared as a GameOps-focused engineering project for GitHub and r�
 
 Implementation note: the internal Python package namespace is still `omnigent` in this first-stage fork rename. That keeps the existing runtime, tests, import paths, and packaging data stable while the public project name, repository, distribution metadata, CLI, docs, and deployment targets move to GameOps Agentic Framework.
 
+## Local Docker app quickstart
+
+The easiest way to run the demo from a fresh clone is the root Docker Compose stack. It starts Postgres, the FastAPI/WebSocket server, the embedded web UI, and a separate Linux host/runner container that owns tmux/PTY terminal processes.
+
+```bash
+git clone https://github.com/Z-57-z/gameops-agentic-framework.git
+cd gameops-agentic-framework
+cp .env.example .env
+# Edit .env with YOUR OWN model API key, base URL, and model.
+docker compose up --build
+```
+
+Open http://localhost:8080 after the server finishes booting.
+
+This local stack is a single-user Demo/MVP deployment. It is useful for GitHub reviewers, résumé walkthroughs, and local development, but it should not be exposed to an untrusted network without enabling real authentication and reviewing the deployment settings.
+
+Model access is bring-your-own-key: `.env` stays on your machine, is ignored by git, and should contain your own OpenAI-compatible or Anthropic API settings. The app reports only non-secret provider/model status through `/v1/info`; it never returns API keys to the browser.
+
+See [`docs/local-docker-deploy.md`](docs/local-docker-deploy.md) for provider examples and troubleshooting.
+
 ## Quick start from this repository
+
+For native development without Docker:
 
 ```bash
 git clone https://github.com/Z-57-z/gameops-agentic-framework.git

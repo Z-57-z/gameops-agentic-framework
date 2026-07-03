@@ -1348,7 +1348,7 @@ def create_app(
         return {"version": _pkg_version("gameops-agentic-framework")}
 
     @app.get("/v1/info")
-    async def info() -> dict[str, bool | str | None]:
+    async def info() -> dict[str, Any]:
         """Runtime capabilities probe for the SPA + CLI.
 
         Returned at app boot by the frontend (and by ``omnigent
@@ -1411,6 +1411,8 @@ def create_app(
         # actually offered; None when no provider is named (embedding
         # configs may leave it unset) so the UI keeps the generic label.
         sandbox_provider = sandbox_config.provider if managed_sandboxes_enabled else None
+        from omnigent.server.model_config import get_model_config_status
+
         return {
             "accounts_enabled": accounts_enabled,
             "login_url": login_url,
@@ -1418,6 +1420,7 @@ def create_app(
             "databricks_features": databricks_features,
             "managed_sandboxes_enabled": managed_sandboxes_enabled,
             "sandbox_provider": sandbox_provider,
+            "model_config": get_model_config_status().to_public_dict(),
         }
 
     @app.get("/v1/me", response_model=None)  # Union return type (dict | JSONResponse)

@@ -1046,6 +1046,18 @@ def test_build_runner_env_allowlists_host_env_and_strips_secrets() -> None:
     base = {
         "PATH": "/usr/bin:/bin",
         "HOME": "/home/alice",
+        "SystemRoot": r"C:\Windows",
+        "SYSTEMROOT": r"C:\Windows",
+        "WINDIR": r"C:\Windows",
+        "windir": r"C:\Windows",
+        "ComSpec": r"C:\Windows\System32\cmd.exe",
+        "COMSPEC": r"C:\Windows\System32\cmd.exe",
+        "PATHEXT": ".COM;.EXE;.BAT;.CMD",
+        "USERPROFILE": r"C:\Users\alice",
+        "APPDATA": r"C:\Users\alice\AppData\Roaming",
+        "LOCALAPPDATA": r"C:\Users\alice\AppData\Local",
+        "TMP": r"C:\Users\alice\AppData\Local\Temp",
+        "TEMP": r"C:\Users\alice\AppData\Local\Temp",
         "LANG": "en_US.UTF-8",
         "LC_CTYPE": "UTF-8",
         "DATABRICKS_CONFIG_PROFILE": "ambient",
@@ -1072,6 +1084,21 @@ def test_build_runner_env_allowlists_host_env_and_strips_secrets() -> None:
     assert env["HOME"] == "/home/alice"
     assert env["LANG"] == "en_US.UTF-8"
     assert env["LC_CTYPE"] == "UTF-8"
+    # Windows process/runtime essentials pass through too. Without these,
+    # stripped runner environments can make CPython fail at startup before
+    # user code runs (for example importing asyncio/_overlapped).
+    assert env["SystemRoot"] == r"C:\Windows"
+    assert env["SYSTEMROOT"] == r"C:\Windows"
+    assert env["WINDIR"] == r"C:\Windows"
+    assert env["windir"] == r"C:\Windows"
+    assert env["ComSpec"] == r"C:\Windows\System32\cmd.exe"
+    assert env["COMSPEC"] == r"C:\Windows\System32\cmd.exe"
+    assert env["PATHEXT"] == ".COM;.EXE;.BAT;.CMD"
+    assert env["USERPROFILE"] == r"C:\Users\alice"
+    assert env["APPDATA"] == r"C:\Users\alice\AppData\Roaming"
+    assert env["LOCALAPPDATA"] == r"C:\Users\alice\AppData\Local"
+    assert env["TMP"] == r"C:\Users\alice\AppData\Local\Temp"
+    assert env["TEMP"] == r"C:\Users\alice\AppData\Local\Temp"
     # Databricks config selectors are allowlisted ambient passthrough —
     # the ambient value reaches the runner unmodified (no flag override).
     assert env["DATABRICKS_CONFIG_PROFILE"] == "ambient"
@@ -1120,6 +1147,8 @@ def test_build_runner_env_forwards_harness_credentials_and_endpoints() -> None:
         "CODEX_ACCESS_TOKEN": "codex-workspace-token",
         "OPENAI_API_KEY": "sk-o",
         "OPENAI_BASE_URL": "https://gateway.example.com/openai",
+        "HARNESS_OPENAI_AGENTS_MODEL": "gpt-4o-mini",
+        "HARNESS_CLAUDE_SDK_MODEL": "claude-sonnet-4-6",
         "GEMINI_API_KEY": "g-key",
     }
 
@@ -1139,6 +1168,8 @@ def test_build_runner_env_forwards_harness_credentials_and_endpoints() -> None:
         "CODEX_ACCESS_TOKEN",
         "OPENAI_API_KEY",
         "OPENAI_BASE_URL",
+        "HARNESS_OPENAI_AGENTS_MODEL",
+        "HARNESS_CLAUDE_SDK_MODEL",
         "GEMINI_API_KEY",
     ):
         # Pins each conventional name into the default set — dropping

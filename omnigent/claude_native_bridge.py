@@ -67,14 +67,48 @@ BRIDGE_DIR_ENV_VAR = "HARNESS_CLAUDE_NATIVE_BRIDGE_DIR"
 REQUEST_SESSION_ID_ENV_VAR = "HARNESS_CLAUDE_NATIVE_REQUEST_SESSION_ID"
 BRIDGE_ID_LABEL_KEY = "omnigent.claude_native.bridge_id"
 
-# Root for the per-process Claude bridge tree. Namespaced by uid so
-# other Unix users on the same host cannot read the bearer token or
-# pre-create the parent as a symlink to redirect the bridge tree. The
-# trusted parent (`/tmp`) is shared; everything under
-# `_BRIDGE_ROOT_PARENT` must be owned by the current uid and not be a
-# symlink — see :func:`_ensure_secure_dir`.
-_TRUSTED_PARENT = Path("/tmp")
-_BRIDGE_ROOT_PARENT = _TRUSTED_PARENT / f"omnigent-{os.getuid()}"
+
+def _current_uid() -> int | None:
+    """
+    Return the POSIX uid when the platform exposes one.
+
+    Windows lacks ``os.getuid``; callers use ``None`` to skip uid-only
+    hardening while still applying the directory and symlink checks that
+    exist on that platform.
+
+    :returns: Current uid, or ``None`` on non-POSIX hosts.
+    """
+    getuid = getattr(os, "getuid", None)
+    if getuid is None:
+        return None
+    return int(getuid())
+
+
+def _bridge_user_namespace() -> str:
+    """
+    Build a filesystem-safe namespace for the bridge parent directory.
+
+    POSIX hosts use uid as before. Windows uses the login name because uid
+    is unavailable, keeping concurrent users from sharing the same temp
+    bridge root in normal desktop/dev environments.
+
+    :returns: A non-empty path segment.
+    """
+    uid = _current_uid()
+    if uid is not None:
+        return str(uid)
+    raw = os.environ.get("USERNAME") or os.environ.get("USER") or str(os.getpid())
+    return re.sub(r"[^A-Za-z0-9_.-]+", "_", raw).strip("._-") or str(os.getpid())
+
+
+# Root for the per-process Claude bridge tree. Namespaced by uid/user so
+# other local users on the same host cannot read the bearer token or
+# pre-create the parent as a symlink to redirect the bridge tree. POSIX
+# keeps using /tmp; Windows uses tempfile.gettempdir() because /tmp is not
+# a native well-known location there. Everything under `_BRIDGE_ROOT_PARENT`
+# must be a real directory — see :func:`_ensure_secure_dir`.
+_TRUSTED_PARENT = Path(tempfile.gettempdir()) if os.name == "nt" else Path("/tmp")
+_BRIDGE_ROOT_PARENT = _TRUSTED_PARENT / f"omnigent-{_bridge_user_namespace()}"
 _BRIDGE_ROOT = _BRIDGE_ROOT_PARENT / "claude-native"
 _CONFIG_FILE = "bridge.json"
 _SERVER_FILE = "server.json"
@@ -611,7 +645,7 @@ def _ensure_secure_dir(target: Path) -> None:
     if cur != trusted_parent:
         raise RuntimeError(f"bridge dir {target!s} is not under trusted parent {trusted_parent!s}")
     ancestors.reverse()
-    my_uid = os.getuid()
+    my_uid = _current_uid()
     for ancestor in ancestors:
         try:
             os.mkdir(ancestor, mode=0o700)
@@ -623,13 +657,14 @@ def _ensure_secure_dir(target: Path) -> None:
             raise RuntimeError(f"refusing to use bridge ancestor {ancestor!s}: is a symlink")
         if not stat.S_ISDIR(st.st_mode):
             raise RuntimeError(f"refusing to use bridge ancestor {ancestor!s}: not a directory")
-        if st.st_uid != my_uid:
+        if my_uid is not None and st.st_uid != my_uid:
             raise RuntimeError(
                 f"refusing to use bridge ancestor {ancestor!s}: owned by uid "
                 f"{st.st_uid}, not current user ({my_uid})"
             )
         if (st.st_mode & 0o077) != 0:
-            os.chmod(ancestor, 0o700)
+            with contextlib.suppress(OSError):
+                os.chmod(ancestor, 0o700)
 
 
 def bridge_dir_for_bridge_id(bridge_id: str) -> Path:

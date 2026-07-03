@@ -78,6 +78,9 @@ async def test_info_returns_expected_fields(client: httpx.AsyncClient) -> None:
     assert data["needs_setup"] is False
     assert isinstance(data["databricks_features"], bool)
     assert isinstance(data["managed_sandboxes_enabled"], bool)
+    model_config = data["model_config"]
+    assert isinstance(model_config["configured"], bool)
+    assert "api_key" not in model_config
 
 
 # ── GET /v1/me ───────────────────────────────────────────

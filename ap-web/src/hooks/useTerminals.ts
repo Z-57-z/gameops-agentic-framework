@@ -81,6 +81,30 @@ export function isAgentTerminalKey(terminalKey: string): boolean {
   return false;
 }
 
+export type PreferredTerminalKind = "agent" | "shell" | "none";
+
+export interface PreferredTerminalSelection {
+  terminal: TerminalInfo | null;
+  kind: PreferredTerminalKind;
+}
+
+/**
+ * Pick the terminal that should headline a session-level visual console.
+ *
+ * The agent's own terminal (SDK REPL / native vendor pane) is the primary
+ * showcase surface. If a regular session only has user shells, fall back to
+ * the first shell so the console is still useful, but let callers label it as
+ * a shell fallback instead of implying it is the agent runtime.
+ */
+export function selectPreferredTerminal(terminals: TerminalInfo[]): PreferredTerminalSelection {
+  const agentTerminal = terminals.find((t) => AGENT_TERMINAL_IDS.has(t.id));
+  if (agentTerminal) return { terminal: agentTerminal, kind: "agent" };
+  const shellTerminal = terminals[0] ?? null;
+  return shellTerminal === null
+    ? { terminal: null, kind: "none" }
+    : { terminal: shellTerminal, kind: "shell" };
+}
+
 /**
  * Project the terminal list down to the session's *inventory* — the
  * shells shown in the right-rail Shells tab, its count badge, and the

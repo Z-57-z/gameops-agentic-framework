@@ -1,0 +1,68 @@
+# Keep the Docker build context lean for the root docker-compose.yml.
+
+# VCS + IDE
+.git
+.gitignore
+.github
+.vscode
+.idea
+
+# Python build outputs and local environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# Node build outputs and local installs
+node_modules/
+ap-web/node_modules/
+ap-web/dist/
+
+# Test + dev artifacts
+tests/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.log
+
+# Local databases / large blobs that may be in the workdir
+*.db
+*.sqlite
+mlflow.db
+conv_*
+
+# Runtime/test outputs
+.sessions/
+.codex-tmp/
+.codex
+.worktrees/
+.claude/worktrees/
+.tmp*
+test-results/
+artifacts/
+
+# Directories not needed by the runtime image
+docs/
+loadtest/
+demos/
+scripts/
+dev/
+designs/
+skills/
+.claude/
+
+# Docs that don't belong in the runtime image
+TODO.md
+AGENTS.md
+openapi.json
+
+# Deploy-time tooling not needed in this image
+deploy/databricks/
+deploy/aws/

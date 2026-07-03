@@ -34,7 +34,7 @@ import { authenticatedFetch } from "@/lib/identity";
 import { isImeCompositionKeyEvent } from "@/lib/ime";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useServerInfo } from "@/lib/CapabilitiesContext";
-import { sandboxOptionLabel } from "@/lib/capabilities";
+import { sandboxOptionLabel, UNCONFIGURED_MODEL_CONFIG } from "@/lib/capabilities";
 import { isSlashCommandText, SlashCommandMenu } from "@/components/SlashCommandMenu";
 import { setPendingInitialPrompt } from "@/store/chatStore";
 import { appendPromptHistoryEntry } from "@/hooks/usePromptHistory";
@@ -71,6 +71,7 @@ import { AgentRowTooltip } from "@/components/AgentHoverCard";
 // created_at desc), so pin the order users expect; any agent not listed
 // here falls after, in server order.
 const AGENT_DISPLAY_ORDER = ["Claude Code", "Codex", "Cursor", "Pi", "Polly", "Debby"];
+const SHOW_POLLY_COST_CONTROL = false;
 
 // Built-in agents (by name slug) — the long-lived agents the server
 // ships out of the box. The picker groups these first, then a divider,
@@ -767,6 +768,7 @@ export function NewChatLandingScreen() {
   // config can actually serve a managed launch advertise it. "loading"
   // fails closed (option hidden) until the boot probe resolves.
   const info = useServerInfo();
+  const modelConfig = info !== "loading" ? info.model_config : UNCONFIGURED_MODEL_CONFIG;
   const managedSandboxesEnabled = info !== "loading" && info.managed_sandboxes_enabled;
   // Provider-named label for the sandbox option (e.g. "Modal Sandbox"),
   // falling back to the generic "New Sandbox" when the server names no
@@ -1469,7 +1471,7 @@ export function NewChatLandingScreen() {
                 {/* Polly-only surface — cost control is a polly feature, so
                     the toggle is hidden unless the selected agent is polly. */}
                 {/* Temporarily hidden (#3021): re-enable by removing the false gate. */}
-                {false && selectedAgent?.name === "polly" && (
+                {SHOW_POLLY_COST_CONTROL && selectedAgent?.name === "polly" && (
                   // Mode-only variant: no verdict can exist before the session does.
                   <IntelligentModelControl value={costControlMode} onChange={setCostControlMode} />
                 )}
@@ -1899,6 +1901,26 @@ export function NewChatLandingScreen() {
               launch, so submitting surfaces a specific error if it
               really can't run. Normal-flow directly under the composer
               (like the createError line below) so it reads as part of it. */}
+          {!modelConfig.configured && (
+            <p
+              className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-500"
+              data-testid="new-chat-landing-model-warning"
+            >
+              <TriangleAlertIcon className="size-3.5 shrink-0" />
+              <span>
+                Model API is not configured — copy <code>.env.example</code> to <code>.env</code>,
+                then fill in <code>LLM_API_KEY</code>, <code>LLM_BASE_URL</code>, and <code>LLM_MODEL</code>.
+              </span>
+            </p>
+          )}
+
+          {modelConfig.configured && (
+            <p className="text-xs text-muted-foreground" data-testid="new-chat-landing-model-status">
+              Model: {modelConfig.provider} / {modelConfig.model ?? "default"}
+              {modelConfig.base_url_host ? ` via ${modelConfig.base_url_host}` : ""}
+            </p>
+          )}
+
           {selectedAgentUnconfigured && (
             <p
               className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-500"
