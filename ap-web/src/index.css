@@ -55,7 +55,7 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-info: var(--info);
-  /* Brand pink — reserved for brand moments, not status. */
+  /* Brand accent — reserved for brand moments, not status. */
   --color-brand-accent: var(--brand-accent);
   /* Named status hues — success/warning/info are repointed to the
      * green/yellow/blue of this set below, so the two stay in lockstep. */
@@ -149,8 +149,8 @@
   --input: #e8ecf0;
   /* Focus ring matches --primary. */
   --ring: #11171c;
-  /* Brand pink — reserved for brand moments, not status. */
-  --brand-accent: #df3c85;
+  /* GameOps command blue — reserved for brand moments, not status. */
+  --brand-accent: #2272b4;
   /* Named status hues. success/warning/info above mirror green/yellow/blue. */
   --status-blue: #3b8ff5;
   --status-green: #2ea65c;
@@ -218,10 +218,10 @@
   --success: #2ea65c;
   --warning: #d4972a;
   --info: #3b8ff5;
-  /* Brand pink + named status hues (same values as light — the brand
+  /* Brand accent + named status hues (same values as light — the brand
      * status palette is hue-stable across themes). Defined explicitly here
      * rather than inheriting from :root so dark mode is self-contained. */
-  --brand-accent: #df3c85;
+  --brand-accent: #3b8ff5;
   --status-blue: #3b8ff5;
   --status-green: #2ea65c;
   --status-yellow: #d4972a;

@@ -75,7 +75,7 @@ dependencies = [
     "opentelemetry-instrumentation-fastapi>=0,<1",
     "opentelemetry-instrumentation-httpx>=0,<1",
     # The Claude Code and OpenAI Agents harnesses are part of the
-    # baseline install — every CUJ command in the README depends on at
+    # baseline install 閳?every CUJ command in the README depends on at
     # least one of them, so making them optional just forces every user
     # to remember `--extra all`. Issue #406.
     "claude-agent-sdk>=0.1.62",
@@ -101,7 +101,7 @@ openai-agents = []
 all = ["databricks-sdk>=0.56.0,<1"]
 # From omnigent.
 bedrock = ["boto3>=1.30,<2", "botocore>=1.30,<2"]
-# S3-compatible artifact store (AWS S3, Cloudflare R2, MinIO, …). Selected
+# S3-compatible artifact store (AWS S3, Cloudflare R2, MinIO, 閳?. Selected
 # with ``OMNIGENT_ARTIFACT_URI=s3://bucket/prefix``; the store imports boto3
 # lazily, so only users of this backend need the extra.
 s3 = ["boto3>=1.30,<2", "botocore>=1.30,<2"]
@@ -138,7 +138,7 @@ agents-sdk = [
 ]
 # Google Antigravity SDK harness (`harness: antigravity`). Optional: the
 # harness module imports the SDK lazily on first turn, so only users of the
-# harness need this extra. Early SDK (v0.1.x) — pin minor.
+# harness need this extra. Early SDK (v0.1.x) 閳?pin minor.
 antigravity = ["google-antigravity>=0.1,<1"]
 # Cursor SDK harness (`harness: cursor`). Optional like antigravity: the
 # harness imports the cursor-sdk lazily on first turn, so only `--harness
@@ -152,7 +152,7 @@ databricks = [
     "opentelemetry-distro>=0,<1",
     "psycopg[binary]>=3.1,<4",
     # Databricks-specific MCP servers. Not imported by core Omnigent
-    # code, so it is opt-in here rather than a default dependency — this
+    # code, so it is opt-in here rather than a default dependency 閳?this
     # also keeps its heavy transitive `mlflow` out of bare OSS installs.
     "databricks-mcp>=0.1.0",
     # Managed Databricks deployments export traces, so they keep mlflow
@@ -242,6 +242,7 @@ include = ["omnigent*"]
 [tool.setuptools.package-data]
 "omnigent.db" = ["alembic.ini"]
 "omnigent.db.migrations" = ["script.py.mako"]
+"omnigent.gameops" = ["data/*.md"]
 "omnigent.resources.examples" = ["*.yaml", "*.sh", "debby/**/*", "polly/**/*"]
 "omnigent.resources.pi_native" = ["*.js"]
 # include UI assets in build
@@ -269,7 +270,7 @@ addopts = "--ignore=lib64 --ignore=tests/e2e --ignore=tests/e2e_ui --ignore=test
 # a stricter --timeout=180; individual tests can opt out via
 # ``@pytest.mark.timeout(N)``. ``thread`` method is more reliable
 # than the default ``signal`` method when tests fork subprocesses
-# (SIGALRM doesn't reach blocked-on-pty children) — see
+# (SIGALRM doesn't reach blocked-on-pty children) 閳?see
 # pytest-timeout README.
 timeout = 300
 timeout_method = "thread"
@@ -286,11 +287,11 @@ markers = [
     "live_app: end-to-end tests requiring a deployed Databricks App server",
     "model(name, ...): one arg pins this test to that model overriding the suite-wide --model CLI default; multiple args fan the test out across all listed models via indirect parametrize.",
     "model_pinned: opt out of tests/_model_pools.py spreading and retry rotation; literal model strings are used as written.",
-    "flaky(reruns=2, reruns_delay=0): rerun a nondeterministic test on failure (pytest-rerunfailures). Use for tests flaky due to timing/scheduling races (e.g. PTY drain timing), NOT real-LLM nondeterminism — those use llm_flaky, which rotates models per attempt.",
+    "flaky(reruns=2, reruns_delay=0): rerun a nondeterministic test on failure (pytest-rerunfailures). Use for tests flaky due to timing/scheduling races (e.g. PTY drain timing), NOT real-LLM nondeterminism 閳?those use llm_flaky, which rotates models per attempt.",
     "llm_flaky(reruns=2, reruns_delay=1): rerun a nondeterministic real-LLM test on failure, rotating to a different model each attempt (tests/_model_pools.py). Never apply to heavy e2e tests that can hit the CI --timeout=180 cap (rerun + loadscope can crash the shard).",
     "in_process_sessions: run a server integration test with the legacy in-process sessions path instead of sessions-native runner dispatch.",
     "nightly: runs only in the scheduled/dispatch pass of its suite; PR and push runs exclude it via -m 'not nightly'. Remove the marker to promote a burned-in test to the PR gate.",
-    "mock_only: tests/integration test that only works in mock-LLM mode (no --llm-api-key). Skipped by tests/integration/conftest.py when a real --llm-api-key is supplied (the real-LLM Integration jobs). Use for tests whose mock LLM is scripted with a fixed tool-call sequence — a real LLM cannot reproduce the scripted markers.",
+    "mock_only: tests/integration test that only works in mock-LLM mode (no --llm-api-key). Skipped by tests/integration/conftest.py when a real --llm-api-key is supplied (the real-LLM Integration jobs). Use for tests whose mock LLM is scripted with a fixed tool-call sequence 閳?a real LLM cannot reproduce the scripted markers.",
 ]
 
 [tool.coverage.run]
@@ -317,10 +318,10 @@ ignore_errors = true
 line-length = 99
 # NOTE: kept at py310 even though requires-python is >=3.12. Bumping this to
 # py312 makes ruff's UP041 rewrite `asyncio.TimeoutError` -> `TimeoutError`
-# (aliased since 3.11) across the whole codebase — a separate, out-of-scope
+# (aliased since 3.11) across the whole codebase 閳?a separate, out-of-scope
 # migration that belongs in its own cleanup PR.
 target-version = "py310"
-# Vendored upstream code — not ours to restyle.
+# Vendored upstream code 閳?not ours to restyle.
 #  - ``omnigent/inner/databricks_mcps/google``: Google MCP server source.
 #  - ``assistant-ui/``: assistant-ui.com React/Python suite imported as a
 #    vendored snapshot; tracked upstream, no in-tree edits.
@@ -330,26 +331,26 @@ extend-exclude = [
 ]
 
 [tool.ruff.lint]
-# ``E``/``F``  — pycodestyle + pyflakes baseline
-# ``I``        — import sorting
-# ``UP``       — pyupgrade (modernize syntax)
-# ``ARG``      — unused function arguments
-# ``BLE``      — blind ``except Exception``
-# ``B``        — flake8-bugbear (latent bugs, e.g. mutable defaults,
+# ``E``/``F``  閳?pycodestyle + pyflakes baseline
+# ``I``        閳?import sorting
+# ``UP``       閳?pyupgrade (modernize syntax)
+# ``ARG``      閳?unused function arguments
+# ``BLE``      閳?blind ``except Exception``
+# ``B``        閳?flake8-bugbear (latent bugs, e.g. mutable defaults,
 #                unbound loop variables in closures, raise-from)
-# ``SIM``      — flake8-simplify (reduce unnecessary complexity)
-# ``RET``      — flake8-return (consistent return statements)
-# ``C4``       — flake8-comprehensions (cleaner list/dict/set comprehensions)
-# ``PIE``      — flake8-pie (misc correctness + style)
-# ``RUF``      — ruff-specific (sorted ``__all__``, dangling asyncio
+# ``SIM``      閳?flake8-simplify (reduce unnecessary complexity)
+# ``RET``      閳?flake8-return (consistent return statements)
+# ``C4``       閳?flake8-comprehensions (cleaner list/dict/set comprehensions)
+# ``PIE``      閳?flake8-pie (misc correctness + style)
+# ``RUF``      閳?ruff-specific (sorted ``__all__``, dangling asyncio
 #                tasks, unused noqa, ...)
 select = ["E", "F", "I", "UP", "ARG", "BLE", "B", "SIM", "RET", "C4", "PIE", "RUF"]
 ignore = [
     # ARG003 (unused class-method args): too noisy on ABC-subclass signatures
     # where the arg is required by the interface contract.
     "ARG003",
-    # RUF001/002/003 ambiguous-unicode: the repo uses ``—`` / ``–`` / ``×`` /
-    # ``╱`` in docstrings and CLI UI strings intentionally. The rule was
+    # RUF001/002/003 ambiguous-unicode: the repo uses ``閳ユ摽` / ``閳ユ彵` / ``鑴砢` /
+    # ``閳虹浗` in docstrings and CLI UI strings intentionally. The rule was
     # designed for source strings that could be confused with ASCII and
     # throws off on legitimate typographic characters in prose.
     "RUF001",
@@ -381,7 +382,7 @@ known-first-party = ["omnigent"]
 # RUF012 (mutable default class attribute): test fake classes and
 # Textual/pytest harnesses routinely declare class-level
 # ``BINDINGS = [...]`` / ``inputSchema: dict = {...}`` that are never
-# mutated — the rule's production-shared-state concern doesn't apply.
+# mutated 閳?the rule's production-shared-state concern doesn't apply.
 #
 # B007 (loop var unused): occasional ``for i, x in enumerate(...)`` in
 # tests where only ``x`` matters; style not worth policing.
@@ -401,7 +402,7 @@ known-first-party = ["omnigent"]
 ]
 # Graduation backlog for code migrated from omnigent during the
 # unification. Pre-unification Omnigent' ruff config only selected
-# ``E, F, I, UP`` — none of the ARG/BLE/B/SIM/... rules — so these
+# ``E, F, I, UP`` 閳?none of the ARG/BLE/B/SIM/... rules 閳?so these
 # files have a backlog of unused-arg, blind-except, and bugbear issues
 # that were invisible before. Graduate each subpath out of this list
 # as it's cleaned up.
@@ -432,8 +433,8 @@ strict = true
 # a genuine boundary needs it (opaque JSON shapes, foreign SDKs) annotate
 # with `# type: ignore[explicit-any]` *and a comment explaining why*.
 disallow_any_explicit = true
-# Vendored Google MCP server code — upstream code, not ours to type.
-# setup.py — build-time scaffolding that imports the (untyped) setuptools
+# Vendored Google MCP server code 閳?upstream code, not ours to type.
+# setup.py 閳?build-time scaffolding that imports the (untyped) setuptools
 # build_py and subclasses it; not application code, so excluded from mypy
 # rather than pulling in types-setuptools just for one shim file.
 exclude = ["^omnigent/inner/databricks_mcps/google/", "^setup\\.py$"]
@@ -461,7 +462,7 @@ ignore_missing_imports = true
 # extra, used by ``deploy/databricks/grant_sp_perms.py``). Previously installed
 # transitively via ``dbos``; after the DBOS removal, ``uv sync
 # --extra dev`` no longer pulls it, so the lint workflow can't
-# import it. Treat the missing module as silent — runtime use still
+# import it. Treat the missing module as silent 閳?runtime use still
 # requires installing the ``databricks`` extra.
 [[tool.mypy.overrides]]
 module = "psycopg.*"
@@ -555,7 +556,7 @@ module = "opentelemetry.instrumentation.*"
 ignore_missing_imports = true
 
 # The Modal deploy glue (deploy/modal/modal_app.py) decorates with the
-# optional `modal` extra, which the lint env doesn't install — under the
+# optional `modal` extra, which the lint env doesn't install 閳?under the
 # modal.* ignore-missing-imports override above its decorators type as
 # Any and trip disallow_untyped_decorators. Relax just that flag.
 [[tool.mypy.overrides]]
@@ -572,11 +573,12 @@ check_untyped_defs = false
 
 # omnigent-derived code that pre-unification omnigent never
 # subjected to ``disallow_any_explicit`` (its pyproject.toml didn't
-# set that flag). Keep the rest of strict mypy on — just relax the
+# set that flag). Keep the rest of strict mypy on 閳?just relax the
 # explicit-Any ban until these modules can be graduated.
 [[tool.mypy.overrides]]
 module = [
     "omnigent.runtime.*",
+    "omnigent.gameops.*",
     "omnigent.server.*",
     "omnigent.tools.*",
     "omnigent.entities.*",
@@ -597,7 +599,7 @@ module = "omnigent_ui_sdk.*"
 ignore_missing_imports = true
 follow_imports = "skip"
 
-# SDK shim aliases — ignore their own import resolution issues. These
+# SDK shim aliases 閳?ignore their own import resolution issues. These
 # are re-exports of omnigent_client/omnigent_ui_sdk (post-Stage-3)
 # via sys.modules aliasing.
 [[tool.mypy.overrides]]
@@ -610,3 +612,5 @@ disallow_any_explicit = false
 [[tool.mypy.overrides]]
 module = "tests.*"
 disallow_any_explicit = false
+
+

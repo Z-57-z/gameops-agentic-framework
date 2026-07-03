@@ -42,8 +42,9 @@ export function AgentTerminalPage() {
   const activeConversation = useMemo(() => {
     if (!conversationId) return null;
     return (
-      conversationsQuery.data?.pages.flatMap((page) => page.data).find((c) => c.id === conversationId) ??
-      null
+      conversationsQuery.data?.pages
+        .flatMap((page) => page.data)
+        .find((c) => c.id === conversationId) ?? null
     );
   }, [conversationId, conversationsQuery.data]);
   const permissionLevel = derivePermissionLevel(
@@ -55,7 +56,11 @@ export function AgentTerminalPage() {
   );
   const readOnly = !isOwnerLevel(permissionLevel);
   const runnerOnline = useSessionRunnerOnline(conversationId);
-  const { terminals, isLoading: terminalsLoading, error: terminalsError } = useTerminals(sessionId, {
+  const {
+    terminals,
+    isLoading: terminalsLoading,
+    error: terminalsError,
+  } = useTerminals(sessionId, {
     reconcileWhilePending: session?.terminalPending ?? false,
   });
   const preferred = useMemo(() => selectPreferredTerminal(terminals), [terminals]);
@@ -65,7 +70,8 @@ export function AgentTerminalPage() {
     [terminals, selectedTerminalId, preferred.terminal],
   );
   const activeKind = activeTerminal === null ? "none" : getRuntimeSurfaceKind(activeTerminal);
-  const { getStatus, setTerminalConnectionState, markTerminalActive } = useTerminalStatuses(terminals);
+  const { getStatus, setTerminalConnectionState, markTerminalActive } =
+    useTerminalStatuses(terminals);
   const [connectionState, setConnectionState] = useState<ConnectionState | null>(null);
   const [lastActivityAt, setLastActivityAt] = useState<number | null>(null);
   const [lastInputAt, setLastInputAt] = useState<number | null>(null);
@@ -76,8 +82,14 @@ export function AgentTerminalPage() {
 
   const title = session?.title ?? activeConversation?.title ?? conversationId;
   const agentName = session?.agentName ?? activeConversation?.agent_name ?? "Agent runtime";
-  const permissionLabel = permissionLevel === null ? "Owner / single-user" : readOnly ? "Read-only" : "Owner";
-  const runnerLabel = runnerOnline === true ? "Runner online" : runnerOnline === false ? "Runner offline" : "Runner unknown";
+  const permissionLabel =
+    permissionLevel === null ? "Owner / single-user" : readOnly ? "Read-only" : "Owner";
+  const runnerLabel =
+    runnerOnline === true
+      ? "Runner online"
+      : runnerOnline === false
+        ? "Runner offline"
+        : "Runner unknown";
   const connectionLabel = connectionStateLabel(connectionState);
   const showLoading = terminalsLoading && terminals.length === 0;
 
@@ -108,7 +120,10 @@ export function AgentTerminalPage() {
             </div>
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-2">
-            <StatusPill label={runnerLabel} tone={runnerOnline === false ? "danger" : runnerOnline === true ? "ok" : "muted"} />
+            <StatusPill
+              label={runnerLabel}
+              tone={runnerOnline === false ? "danger" : runnerOnline === true ? "ok" : "muted"}
+            />
             <StatusPill label={connectionLabel} tone={connectionTone(connectionState)} />
             <StatusPill label={permissionLabel} tone={readOnly ? "warning" : "ok"} icon="shield" />
             <Button asChild variant="outline" size="sm">
@@ -215,7 +230,9 @@ export function AgentTerminalPage() {
                     >
                       <TerminalIcon className="size-3.5 shrink-0" />
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium">{terminal.name || terminal.id}</span>
+                        <span className="block truncate font-medium">
+                          {terminal.name || terminal.id}
+                        </span>
                         <span className="block truncate text-muted-foreground/75">
                           {terminal.session || terminal.id}
                         </span>
@@ -265,13 +282,19 @@ function StatusPill({
     <span
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-xs",
-        tone === "ok" && "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-        tone === "warning" && "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+        tone === "ok" &&
+          "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+        tone === "warning" &&
+          "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
         tone === "danger" && "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300",
         tone === "muted" && "border-border bg-muted text-muted-foreground",
       )}
     >
-      {icon === "shield" ? <ShieldCheckIcon className="size-3.5" /> : <span className="size-1.5 rounded-full bg-current" />}
+      {icon === "shield" ? (
+        <ShieldCheckIcon className="size-3.5" />
+      ) : (
+        <span className="size-1.5 rounded-full bg-current" />
+      )}
       {label}
     </span>
   );
@@ -303,7 +326,16 @@ function RuntimeCard({
       <dl className="grid gap-2 text-xs">
         <InfoRow label="Session" value={sessionId} />
         <InfoRow label="Terminal" value={terminal?.id ?? "n/a"} />
-        <InfoRow label="Surface" value={runtimeSurfaceKind === "agent" ? "Agent TTY" : runtimeSurfaceKind === "shell" ? "Shell fallback" : "None"} />
+        <InfoRow
+          label="Surface"
+          value={
+            runtimeSurfaceKind === "agent"
+              ? "Agent TTY"
+              : runtimeSurfaceKind === "shell"
+                ? "Shell fallback"
+                : "None"
+          }
+        />
         <InfoRow label="Bridge" value={connectionLabel} />
         <InfoRow label="Mode" value={readOnly ? "View-only attach" : "Interactive attach"} />
         <InfoRow label="Last output" value={formatTimestamp(lastActivityAt)} />
@@ -347,7 +379,9 @@ function TerminalShellState({
       <div
         className={cn(
           "flex size-10 items-center justify-center rounded-full border",
-          tone === "danger" ? "border-red-500/30 bg-red-500/10 text-red-600" : "border-border bg-card text-muted-foreground",
+          tone === "danger"
+            ? "border-red-500/30 bg-red-500/10 text-red-600"
+            : "border-border bg-card text-muted-foreground",
         )}
       >
         {loading ? (

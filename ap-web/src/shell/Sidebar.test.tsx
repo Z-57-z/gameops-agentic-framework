@@ -83,12 +83,12 @@ function mockConversations(convs: Conversation[]) {
   useConvMock.mockImplementation(() => result(convs));
 }
 
-function renderSidebar(open = true) {
+function renderSidebar(open = true, path = "/chat") {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={qc}>
       <TooltipProvider>
-        <MemoryRouter initialEntries={["/"]}>
+        <MemoryRouter initialEntries={[path]}>
           <Sidebar open={open} onClose={vi.fn()} />
         </MemoryRouter>
       </TooltipProvider>
@@ -103,6 +103,16 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("Sidebar session list", () => {
+  it("hides legacy session history on the GameOps console landing page", () => {
+    mockConversations(THREE_TYPE_CONVERSATIONS);
+    renderSidebar(true, "/");
+
+    expect(screen.getByRole("link", { name: "GameOps" })).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("搜索会话")).toBeNull();
+    expect(screen.queryByText("Recent")).toBeNull();
+    expect(screen.queryByText("conv_a")).toBeNull();
+  });
+
   it("renders no filter funnel and requests the list with archived included", () => {
     mockConversations(THREE_TYPE_CONVERSATIONS);
     renderSidebar();
@@ -310,7 +320,7 @@ describe("Sidebar mobile overlay background", () => {
     mockConversations(THREE_TYPE_CONVERSATIONS);
     renderSidebar();
 
-    const aside = screen.getByRole("complementary", { name: "Conversations" });
+    const aside = screen.getByRole("complementary", { name: "会话" });
     // On mobile the sidebar is a fixed full-screen overlay ON TOP of the
     // chat. Its desktop look uses the translucent glass --card (60% alpha
     // in dark mode) + backdrop blur, but WebKit/Safari drops the blur as
@@ -344,7 +354,7 @@ describe("Sidebar collapsed marker", () => {
 
     mockConversations(THREE_TYPE_CONVERSATIONS);
     renderSidebar(true);
-    const openAside = screen.getByRole("complementary", { name: "Conversations" });
+    const openAside = screen.getByRole("complementary", { name: "会话" });
     // Open: the attribute must be ABSENT — rendering it as "false" would
     // still match [data-collapsed] and strip the glass border while open.
     expect(openAside).not.toHaveAttribute("data-collapsed");

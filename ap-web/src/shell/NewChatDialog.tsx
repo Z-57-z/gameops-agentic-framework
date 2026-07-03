@@ -2,6 +2,7 @@ import { type DragEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@/lib/routing";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  ActivityIcon,
   MonitorIcon,
   MonitorCloudIcon,
   CircleHelpIcon,
@@ -59,7 +60,6 @@ import { useDirectorySessions } from "@/hooks/useDirectorySessions";
 import { useRunnerHealthRegistration } from "@/hooks/RunnerHealthProvider";
 import { useHostFilesystem, type HostFilesystemEntry } from "@/hooks/useHostFilesystem";
 import type { Conversation } from "@/hooks/useConversations";
-import { OttoEyes } from "@/components/OttoEyes";
 import { SkillPills } from "@/components/SkillPills";
 import { ComposerMicButton } from "@/components/ComposerMicButton";
 import { IntelligentModelControl, type CostControlMode } from "@/components/CostRoutingControl";
@@ -1266,7 +1266,13 @@ export function NewChatLandingScreen() {
           840 − 80 = 760px max. */}
       <div className="flex w-full max-w-[840px] flex-col items-center gap-8 px-10 pt-8 pb-16">
         <div className="flex flex-col items-center gap-3.5 sm:flex-row">
-          <OttoEyes className="h-18 w-auto shrink-0" />
+          <div
+            className="relative flex size-14 shrink-0 items-center justify-center rounded-xl border border-border bg-secondary text-foreground shadow-sm dark:bg-secondary/70"
+            aria-hidden="true"
+          >
+            <ActivityIcon className="size-7" />
+            <span className="absolute right-2 top-2 size-2 rounded-full bg-success shadow-[0_0_0_3px_var(--secondary)] dark:shadow-[0_0_0_3px_var(--card-solid)]" />
+          </div>
           <h1 className="text-center text-3xl font-medium tracking-[-0.03em] text-foreground sm:text-left">
             What should we do?
           </h1>
@@ -1909,13 +1915,17 @@ export function NewChatLandingScreen() {
               <TriangleAlertIcon className="size-3.5 shrink-0" />
               <span>
                 Model API is not configured — copy <code>.env.example</code> to <code>.env</code>,
-                then fill in <code>LLM_API_KEY</code>, <code>LLM_BASE_URL</code>, and <code>LLM_MODEL</code>.
+                then fill in <code>LLM_API_KEY</code>, <code>LLM_BASE_URL</code>, and{" "}
+                <code>LLM_MODEL</code>.
               </span>
             </p>
           )}
 
           {modelConfig.configured && (
-            <p className="text-xs text-muted-foreground" data-testid="new-chat-landing-model-status">
+            <p
+              className="text-xs text-muted-foreground"
+              data-testid="new-chat-landing-model-status"
+            >
               Model: {modelConfig.provider} / {modelConfig.model ?? "default"}
               {modelConfig.base_url_host ? ` via ${modelConfig.base_url_host}` : ""}
             </p>

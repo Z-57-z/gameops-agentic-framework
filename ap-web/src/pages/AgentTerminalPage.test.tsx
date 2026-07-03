@@ -131,7 +131,11 @@ beforeEach(() => {
   useConversationsMock.mockReturnValue(conversationsStub());
   useSessionMock.mockReturnValue({ session: session(), isLoading: false, error: null });
   useSessionRunnerOnlineMock.mockReturnValue(true);
-  useTerminalsMock.mockReturnValue({ terminals: [AGENT_TERMINAL, SHELL_TERMINAL], isLoading: false, error: null });
+  useTerminalsMock.mockReturnValue({
+    terminals: [AGENT_TERMINAL, SHELL_TERMINAL],
+    isLoading: false,
+    error: null,
+  });
 });
 
 afterEach(() => {
@@ -146,16 +150,26 @@ describe("AgentTerminalPage", () => {
     expect(screen.getByText("Agent Terminal Console")).toBeInTheDocument();
     expect(screen.getAllByText("Agent TTY").length).toBeGreaterThan(0);
     expect(screen.getByTestId("terminal-view")).toHaveAttribute("data-session-id", "conv_abc");
-    expect(screen.getByTestId("terminal-view")).toHaveAttribute("data-terminal-id", "terminal_tui_main");
+    expect(screen.getByTestId("terminal-view")).toHaveAttribute(
+      "data-terminal-id",
+      "terminal_tui_main",
+    );
   });
 
   it("falls back to a user shell and labels the fallback clearly", () => {
-    useTerminalsMock.mockReturnValue({ terminals: [SHELL_TERMINAL], isLoading: false, error: null });
+    useTerminalsMock.mockReturnValue({
+      terminals: [SHELL_TERMINAL],
+      isLoading: false,
+      error: null,
+    });
 
     renderPage();
 
     expect(screen.getAllByText("Shell fallback").length).toBeGreaterThan(0);
-    expect(screen.getByTestId("terminal-view")).toHaveAttribute("data-terminal-id", "terminal_bash_s1");
+    expect(screen.getByTestId("terminal-view")).toHaveAttribute(
+      "data-terminal-id",
+      "terminal_bash_s1",
+    );
   });
 
   it("shows a recoverable empty state when no terminal resources exist", () => {
@@ -196,6 +210,9 @@ describe("AgentTerminalPage", () => {
     expect(resources).not.toBeNull();
     fireEvent.click(within(resources as HTMLElement).getByText("bash"));
 
-    expect(screen.getByTestId("terminal-view")).toHaveAttribute("data-terminal-id", "terminal_bash_s1");
+    expect(screen.getByTestId("terminal-view")).toHaveAttribute(
+      "data-terminal-id",
+      "terminal_bash_s1",
+    );
   });
 });

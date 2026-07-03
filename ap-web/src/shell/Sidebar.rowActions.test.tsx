@@ -88,7 +88,7 @@ function renderSidebar() {
   return render(
     <QueryClientProvider client={qc}>
       <TooltipProvider>
-        <MemoryRouter initialEntries={["/"]}>
+        <MemoryRouter initialEntries={["/chat"]}>
           <Sidebar open={true} onClose={vi.fn()} />
         </MemoryRouter>
       </TooltipProvider>

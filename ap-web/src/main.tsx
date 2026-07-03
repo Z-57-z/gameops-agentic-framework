@@ -7,11 +7,7 @@ import { ThemeProvider } from "./components/theme/ThemeProvider";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { RunnerHealthProvider } from "./hooks/RunnerHealthProvider";
 import { SessionUpdatesProvider } from "./hooks/SessionUpdatesProvider";
-import {
-  resolveServerInfo,
-  UNCONFIGURED_MODEL_CONFIG,
-  type ServerInfo,
-} from "./lib/capabilities";
+import { resolveServerInfo, UNCONFIGURED_MODEL_CONFIG, type ServerInfo } from "./lib/capabilities";
 import { CapabilitiesProvider } from "./lib/CapabilitiesContext";
 import { resolveIdentity } from "./lib/identity";
 import { initChatStore } from "./store/chatStore";

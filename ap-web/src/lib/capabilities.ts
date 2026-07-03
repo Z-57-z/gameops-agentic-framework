@@ -146,7 +146,8 @@ function normalizeModelConfig(value: unknown): ModelConfigStatus {
   if (typeof value !== "object" || value === null) return UNCONFIGURED_MODEL_CONFIG;
   const data = value as Partial<ModelConfigStatus>;
   return {
-    provider: typeof data.provider === "string" ? data.provider : UNCONFIGURED_MODEL_CONFIG.provider,
+    provider:
+      typeof data.provider === "string" ? data.provider : UNCONFIGURED_MODEL_CONFIG.provider,
     model: typeof data.model === "string" ? data.model : null,
     base_url: typeof data.base_url === "string" ? data.base_url : null,
     base_url_host: typeof data.base_url_host === "string" ? data.base_url_host : null,

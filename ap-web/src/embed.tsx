@@ -30,11 +30,7 @@ import App from "./App";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { RunnerHealthProvider } from "./hooks/RunnerHealthProvider";
 import { CapabilitiesContext } from "./lib/CapabilitiesContext";
-import {
-  resolveServerInfo,
-  UNCONFIGURED_MODEL_CONFIG,
-  type ServerInfo,
-} from "./lib/capabilities";
+import { resolveServerInfo, UNCONFIGURED_MODEL_CONFIG, type ServerInfo } from "./lib/capabilities";
 import { EmbeddedProvider } from "./lib/embedded";
 import { type OmnigentHostConfig, setEmbedRoot, setOmnigentHostConfig } from "./lib/host";
 import { resolveIdentity } from "./lib/identity";

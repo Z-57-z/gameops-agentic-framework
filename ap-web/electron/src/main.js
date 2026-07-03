@@ -847,7 +847,7 @@ function createWindow(targetUrl, opts = {}) {
     ...(savedBounds ? { x: savedBounds.x, y: savedBounds.y } : {}),
     minWidth: 720,
     minHeight: 480,
-    title: "Omnigent",
+    title: "GameOps Agent",
     backgroundColor: "#0b0b0c",
     // macOS: hide the native title bar but keep the traffic lights, inset
     // into the content. The web layer provides the drag surface + clearance
@@ -1711,7 +1711,7 @@ function registerIpc() {
 // ---------------------------------------------------------------------------
 
 // Name drives the macOS app menu title and the notification source name.
-app.setName("Omnigent");
+app.setName("GameOps Agent");
 
 // Single-instance: focus the existing window instead of opening a second.
 const gotLock = app.requestSingleInstanceLock();

@@ -47,6 +47,21 @@ Model access is bring-your-own-key: `.env` stays on your machine, is ignored by 
 
 See [`docs/local-docker-deploy.md`](docs/local-docker-deploy.md) for provider examples and troubleshooting.
 
+## GameOps Agent demo
+
+The default web entry point is now the GameOps Agent console. It uses the first-party `omnigent.gameops` runtime for business workflow routing, curated knowledge retrieval, risk gates, source citations, and structured answers. This business path does not delegate the request to Codex Agent, Claude Code, Cursor Agent, or another external agent product.
+
+After the Docker stack is running, verify the source-backed Knowledge Agent directly:
+
+```bash
+curl -s http://localhost:8080/v1/gameops/ask \
+  -H 'Content-Type: application/json' \
+  -d '{"question":"A player missed the recharge rebate reward. What can support promise?"}'
+```
+
+The response includes `answer`, `workflow`, `risk_level`, `sources`, `next_actions`, `missing_information`, `confidence`, and `audit`. Demo sources live under `omnigent/gameops/data/`.
+
+
 ## Quick start from this repository
 
 For native development without Docker:
