@@ -174,6 +174,19 @@ export type ExecutionTaskStatus =
   | "in_progress"
   | "blocked"
   | "done";
+export type ExecutionDecision = "approved" | "rejected";
+export type ExecutionToolStatus = "success" | "blocked";
+export type ExecutionAction = "approve" | "run";
+export type ExecutionLoopPhase = "precheck" | "execute" | "verify" | "state_update";
+export type ExecutionLoopStepStatus = "success" | "blocked" | "skipped";
+export type ExecutionPrecheckStatus = "pass" | "blocked";
+export type ExecutionRecoveryActionKind =
+  | "collect_evidence"
+  | "request_approval"
+  | "request_permission"
+  | "retry"
+  | "manual_handoff";
+export type EnterpriseReadinessStatus = "ready" | "warning" | "missing";
 
 interface ExecutionTaskWire {
   task_id: string;
@@ -183,6 +196,8 @@ interface ExecutionTaskWire {
   due: string;
   approval_required: boolean;
   evidence_required: string[];
+  approved_by?: string | null;
+  approval_comment?: string | null;
 }
 
 export interface ExecutionTask {
@@ -193,6 +208,254 @@ export interface ExecutionTask {
   due: string;
   approvalRequired: boolean;
   evidenceRequired: string[];
+  approvedBy?: string | null;
+  approvalComment?: string | null;
+}
+
+export interface ExecutionApprovalRequest {
+  task: ExecutionTask;
+  approver: string;
+  decision: ExecutionDecision;
+  comment?: string;
+}
+
+export interface ExecutionRunRequest {
+  task: ExecutionTask;
+  operator: string;
+  operatorRole?: string;
+  evidence: Record<string, string>;
+}
+
+interface ExecutionToolResultWire {
+  tool_name: string;
+  status: ExecutionToolStatus;
+  summary: string;
+  evidence: Record<string, string>;
+  receipt?: ExecutionToolReceiptWire | null;
+}
+
+export interface ExecutionToolResult {
+  toolName: string;
+  status: ExecutionToolStatus;
+  summary: string;
+  evidence: Record<string, string>;
+  receipt: ExecutionToolReceipt | null;
+}
+
+interface ExecutionToolReceiptWire {
+  system: string;
+  operation: string;
+  reference_id: string;
+  dry_run: boolean;
+  written_fields: string[];
+  verification_notes: string[];
+}
+
+export interface ExecutionToolReceipt {
+  system: string;
+  operation: string;
+  referenceId: string;
+  dryRun: boolean;
+  writtenFields: string[];
+  verificationNotes: string[];
+}
+
+interface ExecutionActionResponseWire {
+  task: ExecutionTaskWire;
+  tool_result: ExecutionToolResultWire;
+  missing_evidence: string[];
+  approval_required: boolean;
+  precheck_items: ExecutionPrecheckItemWire[];
+  loop_steps: ExecutionLoopStepWire[];
+  recovery_actions: ExecutionRecoveryActionWire[];
+  audit: GameOpsAuditWire;
+}
+
+interface ExecutionPrecheckItemWire {
+  check_id: string;
+  label: string;
+  status: ExecutionPrecheckStatus;
+  detail: string;
+}
+
+export interface ExecutionPrecheckItem {
+  checkId: string;
+  label: string;
+  status: ExecutionPrecheckStatus;
+  detail: string;
+}
+
+interface ExecutionLoopStepWire {
+  phase: ExecutionLoopPhase;
+  status: ExecutionLoopStepStatus;
+  summary: string;
+}
+
+export interface ExecutionLoopStep {
+  phase: ExecutionLoopPhase;
+  status: ExecutionLoopStepStatus;
+  summary: string;
+}
+
+interface ExecutionRecoveryActionWire {
+  action_id: string;
+  kind: ExecutionRecoveryActionKind;
+  label: string;
+  description: string;
+}
+
+export interface ExecutionRecoveryAction {
+  actionId: string;
+  kind: ExecutionRecoveryActionKind;
+  label: string;
+  description: string;
+}
+
+export interface ExecutionActionResponse {
+  task: ExecutionTask;
+  toolResult: ExecutionToolResult;
+  missingEvidence: string[];
+  approvalRequired: boolean;
+  precheckItems: ExecutionPrecheckItem[];
+  loopSteps: ExecutionLoopStep[];
+  recoveryActions: ExecutionRecoveryAction[];
+  audit: GameOpsAudit;
+}
+
+interface ExecutionHistoryRecordWire {
+  record_id: string;
+  created_at: string;
+  action: ExecutionAction;
+  actor: string;
+  task_id: string;
+  task_title: string;
+  tool_name: string;
+  status: ExecutionToolStatus;
+  summary: string;
+  evidence: Record<string, string>;
+  validation_notes: string[];
+}
+
+export interface ExecutionHistoryRecord {
+  recordId: string;
+  createdAt: string;
+  action: ExecutionAction;
+  actor: string;
+  taskId: string;
+  taskTitle: string;
+  toolName: string;
+  status: ExecutionToolStatus;
+  summary: string;
+  evidence: Record<string, string>;
+  validationNotes: string[];
+}
+
+interface ExecutionHistoryResponseWire {
+  records: ExecutionHistoryRecordWire[];
+}
+
+export interface ExecutionHistoryResponse {
+  records: ExecutionHistoryRecord[];
+}
+
+interface ExecutionTaskListResponseWire {
+  tasks: ExecutionTaskWire[];
+}
+
+export interface ExecutionTaskListResponse {
+  tasks: ExecutionTask[];
+}
+
+interface ExecutionReportResponseWire {
+  generated_at: string;
+  record_count: number;
+  markdown: string;
+}
+
+export interface ExecutionReportResponse {
+  generatedAt: string;
+  recordCount: number;
+  markdown: string;
+}
+
+interface ExecutionPolicyRuleWire {
+  task_id: string;
+  title: string;
+  tool_name: string;
+  target_system: string;
+  operation: string;
+  required_role: string;
+  risk_level: GameOpsRiskLevel;
+  retry_policy: ExecutionRetryPolicyWire;
+  failure_mode: ExecutionRecoveryActionKind;
+  approval_required: boolean;
+  evidence_required: string[];
+  guardrails: string[];
+}
+
+interface ExecutionRetryPolicyWire {
+  max_attempts: number;
+  backoff_seconds: number;
+}
+
+export interface ExecutionRetryPolicy {
+  maxAttempts: number;
+  backoffSeconds: number;
+}
+
+export interface ExecutionPolicyRule {
+  taskId: string;
+  title: string;
+  toolName: string;
+  targetSystem: string;
+  operation: string;
+  requiredRole: string;
+  riskLevel: GameOpsRiskLevel;
+  retryPolicy: ExecutionRetryPolicy;
+  failureMode: ExecutionRecoveryActionKind;
+  approvalRequired: boolean;
+  evidenceRequired: string[];
+  guardrails: string[];
+}
+
+interface ExecutionPolicyResponseWire {
+  rules: ExecutionPolicyRuleWire[];
+}
+
+export interface ExecutionPolicyResponse {
+  rules: ExecutionPolicyRule[];
+}
+
+interface EnterpriseReadinessItemWire {
+  component: string;
+  status: EnterpriseReadinessStatus;
+  summary: string;
+  detail: string;
+  remediation?: string | null;
+}
+
+export interface EnterpriseReadinessItem {
+  component: string;
+  status: EnterpriseReadinessStatus;
+  summary: string;
+  detail: string;
+  remediation: string | null;
+}
+
+interface EnterpriseReadinessResponseWire {
+  overall_status: EnterpriseReadinessStatus;
+  integration_mode: string;
+  dry_run: boolean;
+  tool_count: number;
+  items: EnterpriseReadinessItemWire[];
+}
+
+export interface EnterpriseReadinessResponse {
+  overallStatus: EnterpriseReadinessStatus;
+  integrationMode: string;
+  dryRun: boolean;
+  toolCount: number;
+  items: EnterpriseReadinessItem[];
 }
 
 interface IncidentRunbookResponseWire {
@@ -273,6 +536,88 @@ export async function planIncident(
   return incidentRunbookFromWire((await res.json()) as IncidentRunbookResponseWire);
 }
 
+export async function approveExecutionTask(
+  request: ExecutionApprovalRequest,
+): Promise<ExecutionActionResponse> {
+  const res = await authenticatedFetch("/v1/gameops/execution/approve", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(executionApprovalRequestToWire(request)),
+  });
+  if (!res.ok) {
+    throw new Error(await readErrorMessage(res));
+  }
+  return executionActionFromWire((await res.json()) as ExecutionActionResponseWire);
+}
+
+export async function runExecutionTask(
+  request: ExecutionRunRequest,
+): Promise<ExecutionActionResponse> {
+  const res = await authenticatedFetch("/v1/gameops/execution/run", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(executionRunRequestToWire(request)),
+  });
+  if (!res.ok) {
+    throw new Error(await readErrorMessage(res));
+  }
+  return executionActionFromWire((await res.json()) as ExecutionActionResponseWire);
+}
+
+export async function registerExecutionTasks(
+  tasks: ExecutionTask[],
+): Promise<ExecutionTaskListResponse> {
+  const res = await authenticatedFetch("/v1/gameops/execution/tasks", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tasks: tasks.map(executionTaskToWire) }),
+  });
+  if (!res.ok) {
+    throw new Error(await readErrorMessage(res));
+  }
+  return executionTaskListFromWire((await res.json()) as ExecutionTaskListResponseWire);
+}
+
+export async function listExecutionHistory(): Promise<ExecutionHistoryResponse> {
+  const res = await authenticatedFetch("/v1/gameops/execution/history", {
+    method: "GET",
+  });
+  if (!res.ok) {
+    throw new Error(await readErrorMessage(res));
+  }
+  return executionHistoryFromWire((await res.json()) as ExecutionHistoryResponseWire);
+}
+
+export async function listExecutionReport(): Promise<ExecutionReportResponse> {
+  const res = await authenticatedFetch("/v1/gameops/execution/report", {
+    method: "GET",
+  });
+  if (!res.ok) {
+    throw new Error(await readErrorMessage(res));
+  }
+  return executionReportFromWire((await res.json()) as ExecutionReportResponseWire);
+}
+
+export async function listExecutionPolicy(): Promise<ExecutionPolicyResponse> {
+  const res = await authenticatedFetch("/v1/gameops/execution/policy", {
+    method: "GET",
+  });
+  if (!res.ok) {
+    throw new Error(await readErrorMessage(res));
+  }
+  return executionPolicyFromWire((await res.json()) as ExecutionPolicyResponseWire);
+}
+
+export async function getEnterpriseReadiness(): Promise<EnterpriseReadinessResponse> {
+  const res = await authenticatedFetch("/v1/gameops/enterprise/readiness", {
+    method: "GET",
+  });
+  if (!res.ok) {
+    throw new Error(await readErrorMessage(res));
+  }
+  return enterpriseReadinessFromWire((await res.json()) as EnterpriseReadinessResponseWire);
+}
+
 function responseFromWire(wire: GameOpsAskResponseWire): GameOpsAskResponse {
   return {
     answer: wire.answer,
@@ -350,6 +695,123 @@ function incidentRunbookFromWire(wire: IncidentRunbookResponseWire): IncidentRun
   };
 }
 
+function executionActionFromWire(wire: ExecutionActionResponseWire): ExecutionActionResponse {
+  return {
+    task: executionTaskFromWire(wire.task),
+    toolResult: {
+      toolName: wire.tool_result.tool_name,
+      status: wire.tool_result.status,
+      summary: wire.tool_result.summary,
+      evidence: wire.tool_result.evidence,
+      receipt: wire.tool_result.receipt
+        ? {
+            system: wire.tool_result.receipt.system,
+            operation: wire.tool_result.receipt.operation,
+            referenceId: wire.tool_result.receipt.reference_id,
+            dryRun: wire.tool_result.receipt.dry_run,
+            writtenFields: wire.tool_result.receipt.written_fields,
+            verificationNotes: wire.tool_result.receipt.verification_notes,
+          }
+        : null,
+    },
+    missingEvidence: wire.missing_evidence,
+    approvalRequired: wire.approval_required,
+    precheckItems: (wire.precheck_items ?? []).map((item) => ({
+      checkId: item.check_id,
+      label: item.label,
+      status: item.status,
+      detail: item.detail,
+    })),
+    loopSteps: wire.loop_steps.map((step) => ({
+      phase: step.phase,
+      status: step.status,
+      summary: step.summary,
+    })),
+    recoveryActions: (wire.recovery_actions ?? []).map((action) => ({
+      actionId: action.action_id,
+      kind: action.kind,
+      label: action.label,
+      description: action.description,
+    })),
+    audit: {
+      retrievedChunkIds: wire.audit.retrieved_chunk_ids,
+      validationNotes: wire.audit.validation_notes,
+    },
+  };
+}
+
+function executionHistoryFromWire(wire: ExecutionHistoryResponseWire): ExecutionHistoryResponse {
+  return {
+    records: wire.records.map((record) => ({
+      recordId: record.record_id,
+      createdAt: record.created_at,
+      action: record.action,
+      actor: record.actor,
+      taskId: record.task_id,
+      taskTitle: record.task_title,
+      toolName: record.tool_name,
+      status: record.status,
+      summary: record.summary,
+      evidence: record.evidence,
+      validationNotes: record.validation_notes,
+    })),
+  };
+}
+
+function executionTaskListFromWire(wire: ExecutionTaskListResponseWire): ExecutionTaskListResponse {
+  return {
+    tasks: wire.tasks.map(executionTaskFromWire),
+  };
+}
+
+function executionReportFromWire(wire: ExecutionReportResponseWire): ExecutionReportResponse {
+  return {
+    generatedAt: wire.generated_at,
+    recordCount: wire.record_count,
+    markdown: wire.markdown,
+  };
+}
+
+function executionPolicyFromWire(wire: ExecutionPolicyResponseWire): ExecutionPolicyResponse {
+  return {
+    rules: wire.rules.map((rule) => ({
+      taskId: rule.task_id,
+      title: rule.title,
+      toolName: rule.tool_name,
+      targetSystem: rule.target_system,
+      operation: rule.operation,
+      requiredRole: rule.required_role,
+      riskLevel: rule.risk_level,
+      retryPolicy: {
+        maxAttempts: rule.retry_policy.max_attempts,
+        backoffSeconds: rule.retry_policy.backoff_seconds,
+      },
+      failureMode: rule.failure_mode,
+      approvalRequired: rule.approval_required,
+      evidenceRequired: rule.evidence_required,
+      guardrails: rule.guardrails,
+    })),
+  };
+}
+
+function enterpriseReadinessFromWire(
+  wire: EnterpriseReadinessResponseWire,
+): EnterpriseReadinessResponse {
+  return {
+    overallStatus: wire.overall_status,
+    integrationMode: wire.integration_mode,
+    dryRun: wire.dry_run,
+    toolCount: wire.tool_count,
+    items: wire.items.map((item) => ({
+      component: item.component,
+      status: item.status,
+      summary: item.summary,
+      detail: item.detail,
+      remediation: item.remediation ?? null,
+    })),
+  };
+}
+
 function campaignRequestToWire(request: CampaignDraftRequest) {
   return {
     campaign_name: request.campaignName,
@@ -386,6 +848,24 @@ function incidentRunbookRequestToWire(request: IncidentRunbookRequest) {
   };
 }
 
+function executionApprovalRequestToWire(request: ExecutionApprovalRequest) {
+  return {
+    task: executionTaskToWire(request.task),
+    approver: request.approver,
+    decision: request.decision,
+    comment: optionalString(request.comment),
+  };
+}
+
+function executionRunRequestToWire(request: ExecutionRunRequest) {
+  return {
+    task: executionTaskToWire(request.task),
+    operator: request.operator,
+    operator_role: optionalString(request.operatorRole),
+    evidence: request.evidence,
+  };
+}
+
 function optionalString(value: string | undefined): string | undefined {
   const trimmed = value?.trim();
   return trimmed ? trimmed : undefined;
@@ -412,6 +892,22 @@ function executionTaskFromWire(wire: ExecutionTaskWire): ExecutionTask {
     due: wire.due,
     approvalRequired: wire.approval_required,
     evidenceRequired: wire.evidence_required,
+    approvedBy: wire.approved_by ?? null,
+    approvalComment: wire.approval_comment ?? null,
+  };
+}
+
+function executionTaskToWire(task: ExecutionTask): ExecutionTaskWire {
+  return {
+    task_id: task.taskId,
+    title: task.title,
+    owner_role: task.ownerRole,
+    status: task.status,
+    due: task.due,
+    approval_required: task.approvalRequired,
+    evidence_required: task.evidenceRequired,
+    approved_by: task.approvedBy ?? null,
+    approval_comment: task.approvalComment ?? null,
   };
 }
 

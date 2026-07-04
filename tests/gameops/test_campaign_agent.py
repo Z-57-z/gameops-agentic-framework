@@ -1,12 +1,17 @@
 import pytest
 
 from omnigent.gameops.campaign_agent import create_default_campaign_agent
+from omnigent.gameops.knowledge_store import load_starter_knowledge_base
 from omnigent.gameops.schemas import CampaignDraftRequest, RiskLevel
+
+
+def _starter_agent():
+    return create_default_campaign_agent(load_starter_knowledge_base())
 
 
 @pytest.mark.asyncio
 async def test_campaign_agent_drafts_announcement_and_launch_checks() -> None:
-    agent = create_default_campaign_agent()
+    agent = _starter_agent()
 
     response = await agent.draft(
         CampaignDraftRequest(
@@ -24,7 +29,9 @@ async def test_campaign_agent_drafts_announcement_and_launch_checks() -> None:
     assert "2026-07-10 10:00 UTC" in response.announcement_body
     assert "Recharge 10 USD" in response.announcement_body
     assert response.support_faq
-    assert any(check.label == "活动时间" and check.status == "pass" for check in response.launch_checks)
+    assert any(
+        check.label == "活动时间" and check.status == "pass" for check in response.launch_checks
+    )
     assert response.sources
     assert response.risk_level == RiskLevel.HIGH
     assert any("审批" in action for action in response.next_actions)
@@ -34,7 +41,9 @@ async def test_campaign_agent_drafts_announcement_and_launch_checks() -> None:
         and task.approval_required
         for task in response.execution_tasks
     )
-    approval_task = next(task for task in response.execution_tasks if task.task_id == "approval-launch")
+    approval_task = next(
+        task for task in response.execution_tasks if task.task_id == "approval-launch"
+    )
     assert "公告草稿" in approval_task.evidence_required
     assert "奖励配置截图" in approval_task.evidence_required
     assert "回滚方案" in approval_task.evidence_required
@@ -61,7 +70,9 @@ async def test_campaign_agent_outputs_chinese_business_artifacts() -> None:
     assert "活动时间：周五 10:00 至 周日 23:59" in response.announcement_body
     assert "奖励规则：充值 68 元可领取 120 宝石和体力礼包。" in response.announcement_body
     assert response.support_faq[0].startswith("谁可以参与？")
-    assert any(check.label == "活动时间" and check.status == "pass" for check in response.launch_checks)
+    assert any(
+        check.label == "活动时间" and check.status == "pass" for check in response.launch_checks
+    )
     assert any("运营负责人审批" in action for action in response.next_actions)
 
 

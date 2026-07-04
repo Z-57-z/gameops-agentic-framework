@@ -41,17 +41,19 @@ docker compose up --build
 
 Open http://localhost:8080 after the server finishes booting.
 
-This local stack is a single-user Demo/MVP deployment. It is useful for GitHub reviewers, résumé walkthroughs, and local development, but it should not be exposed to an untrusted network without enabling real authentication and reviewing the deployment settings.
+This local stack is a single-user MVP deployment. It is useful for GitHub reviewers, résumé walkthroughs, and local development, but it should not be exposed to an untrusted network without enabling real authentication and reviewing the deployment settings.
 
 Model access is bring-your-own-key: `.env` stays on your machine, is ignored by git, and should contain your own OpenAI-compatible or Anthropic API settings. The app reports only non-secret provider/model status through `/v1/info`; it never returns API keys to the browser.
 
-See [`docs/local-docker-deploy.md`](docs/local-docker-deploy.md) for provider examples and troubleshooting.
+See [`docs/local-docker-deploy.md`](docs/local-docker-deploy.md) for provider examples, GameOps runtime configuration, knowledge-source setup, and troubleshooting.
 
 ## GameOps Agent demo
 
 The default web entry point is now the GameOps Agent console. It uses the first-party `omnigent.gameops` runtime for business workflow routing, curated knowledge retrieval, risk gates, source citations, and structured answers. This business path does not delegate the request to Codex Agent, Claude Code, Cursor Agent, or another external agent product.
 
-After the Docker stack is running, verify the source-backed Knowledge Agent directly:
+The runtime does not load repository starter knowledge as production data. Set `GAMEOPS_KNOWLEDGE_DIR` to a directory containing your own Markdown policies, activity rules, support handbooks, and incident runbooks before pilot use. Execution state and audit history are persisted through `GAMEOPS_EXECUTION_DB_PATH`, while approval/risk/tool rules can be overridden through `GAMEOPS_EXECUTION_POLICY_PATH`.
+
+After the Docker stack is running and a knowledge directory is configured, verify the source-backed Knowledge Agent directly:
 
 ```bash
 curl -s http://localhost:8080/v1/gameops/ask \
@@ -59,8 +61,9 @@ curl -s http://localhost:8080/v1/gameops/ask \
   -d '{"question":"A player missed the recharge rebate reward. What can support promise?"}'
 ```
 
-The response includes `answer`, `workflow`, `risk_level`, `sources`, `next_actions`, `missing_information`, `confidence`, and `audit`. Demo sources live under `omnigent/gameops/data/`.
+The response includes `answer`, `workflow`, `risk_level`, `sources`, `next_actions`, `missing_information`, `confidence`, and `audit`. If no enterprise knowledge source is configured, readiness reports `missing` and knowledge Q&A safely degrades instead of using bundled sample data.
 
+See [`docs/gameops-enterprise-runbook.md`](docs/gameops-enterprise-runbook.md) for environment variables, Docker/local startup, health checks, required runtime files, persistence, permissions, tool integration, and failure handling.
 
 ## Quick start from this repository
 

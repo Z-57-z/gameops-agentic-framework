@@ -1,12 +1,17 @@
 import pytest
 
 from omnigent.gameops.incident_agent import create_default_incident_agent
+from omnigent.gameops.knowledge_store import load_starter_knowledge_base
 from omnigent.gameops.schemas import IncidentRunbookRequest, RiskLevel, WorkflowKind
+
+
+def _starter_agent():
+    return create_default_incident_agent(load_starter_knowledge_base())
 
 
 @pytest.mark.asyncio
 async def test_incident_runbook_classifies_login_outage_and_sets_cadence() -> None:
-    agent = create_default_incident_agent()
+    agent = _starter_agent()
 
     response = await agent.plan(
         IncidentRunbookRequest(
@@ -25,7 +30,10 @@ async def test_incident_runbook_classifies_login_outage_and_sets_cadence() -> No
     assert response.sources
     assert "分钟" in response.communication_cadence
     assert any("状态" in action or "同步" in action for action in response.next_actions)
-    assert all(source.title in {"事故手册", "补偿政策", "活动检查清单", "客服 FAQ", "充值返利政策"} for source in response.sources)
+    assert all(
+        source.title in {"事故手册", "补偿政策", "活动检查清单", "客服 FAQ", "充值返利政策"}
+        for source in response.sources
+    )
     assert response.execution_tasks
     assert response.execution_tasks[0].owner_role == "事故指挥官"
     assert any(task.due == "立即" for task in response.execution_tasks)

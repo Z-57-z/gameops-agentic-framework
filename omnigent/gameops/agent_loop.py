@@ -37,7 +37,15 @@ _HIGH_RISK_TERMS = {
     "退款",
     "高级货币",
 }
-_CRITICAL_RISK_TERMS = {"payment loss", "refund", "rollback", "sev1", "支付损失", "退款", "全量回滚"}
+_CRITICAL_RISK_TERMS = {
+    "payment loss",
+    "refund",
+    "rollback",
+    "sev1",
+    "支付损失",
+    "退款",
+    "全量回滚",
+}
 
 
 @dataclass(frozen=True)
@@ -61,14 +69,14 @@ class GameOpsAgentLoop:
             audit.validation_notes.append("未命中可引用知识片段，回答已降级。")
             return GameOpsAskResponse(
                 answer=(
-                    "当前内置 GameOps 知识库不足以安全回答这个问题。请先补齐相关政策或操作手册，"
+                    "当前 GameOps 知识库未配置或未命中足够依据。请先接入企业政策、操作手册或业务规则，"
                     "再对玩家做任何明确承诺。"
                 ),
                 workflow=workflow,
                 risk_level=risk_level,
                 sources=[],
-                next_actions=["先补充或定位相关 GameOps 政策，再回复玩家。"],
-                missing_information=["没有命中内置知识来源。"],
+                next_actions=["先接入或定位相关 GameOps 政策，再回复玩家。"],
+                missing_information=["没有命中已配置知识来源。"],
                 confidence=0,
                 audit=audit,
             )
@@ -96,7 +104,7 @@ class GameOpsAgentLoop:
 
 
 def create_default_gameops_agent(store: KnowledgeStore | None = None) -> GameOpsAgentLoop:
-    """Create the default local-demo GameOps agent runtime."""
+    """Create the default GameOps agent runtime."""
     knowledge_store = store or load_default_knowledge_base()
     return GameOpsAgentLoop(
         retriever=LexicalRetriever(knowledge_store),
@@ -110,7 +118,11 @@ def _risk_for(question: str, workflow: WorkflowKind) -> RiskLevel:
         return RiskLevel.CRITICAL
     if any(term in text for term in _HIGH_RISK_TERMS):
         return RiskLevel.HIGH
-    if workflow in {WorkflowKind.CAMPAIGN_OPS, WorkflowKind.INCIDENT_RUNBOOK, WorkflowKind.TICKET_TRIAGE}:
+    if workflow in {
+        WorkflowKind.CAMPAIGN_OPS,
+        WorkflowKind.INCIDENT_RUNBOOK,
+        WorkflowKind.TICKET_TRIAGE,
+    }:
         return RiskLevel.MEDIUM
     return RiskLevel.LOW
 
@@ -178,15 +190,19 @@ def _next_actions_for(question: str, workflow: WorkflowKind, risk_level: RiskLev
     actions: list[str] = []
     text = question.lower()
     if "rebate" in text or "reward" in text or "返利" in text or "奖励" in text:
-        actions.extend([
-            "核验玩家 ID、服务器 ID、活动 ID、充值时间和发奖日志。",
-            "资格确认前使用条件性话术，不直接承诺补发。",
-        ])
+        actions.extend(
+            [
+                "核验玩家 ID、服务器 ID、活动 ID、充值时间和发奖日志。",
+                "资格确认前使用条件性话术，不直接承诺补发。",
+            ]
+        )
     if workflow == WorkflowKind.CAMPAIGN_OPS:
-        actions.extend([
-            "上线前逐项比对活动配置和公告文案。",
-            "确认回滚负责人和监控看板。",
-        ])
+        actions.extend(
+            [
+                "上线前逐项比对活动配置和公告文案。",
+                "确认回滚负责人和监控看板。",
+            ]
+        )
     if workflow == WorkflowKind.TICKET_TRIAGE:
         actions.append("补齐工单必要标识后再给出最终回复。")
     if workflow == WorkflowKind.INCIDENT_RUNBOOK:
@@ -200,13 +216,17 @@ def _missing_information_for(question: str, workflow: WorkflowKind) -> list[str]
     text = question.lower()
     missing: list[str] = []
     if (
-        "player" in text
-        or "ticket" in text
-        or "reward" in text
-        or "玩家" in text
-        or "工单" in text
-        or "奖励" in text
-    ) and "player id" not in text and "玩家 id" not in text:
+        (
+            "player" in text
+            or "ticket" in text
+            or "reward" in text
+            or "玩家" in text
+            or "工单" in text
+            or "奖励" in text
+        )
+        and "player id" not in text
+        and "玩家 id" not in text
+    ):
         missing.append("玩家 ID")
     if ("payment" in text or "支付" in text) and "order" not in text and "订单" not in text:
         missing.append("订单 ID 或平台支付凭证 ID")

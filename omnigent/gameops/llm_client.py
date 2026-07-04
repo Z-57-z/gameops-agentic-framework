@@ -14,7 +14,7 @@ class LLMClient(Protocol):
 
 
 class DeterministicGameOpsLLMClient:
-    """Offline-safe fallback used by tests and local demos."""
+    """Offline-safe deterministic client used by tests and local evaluation."""
 
     async def complete(self, prompt: str) -> str:
         """Return a stable answer from the prepared evidence prompt."""

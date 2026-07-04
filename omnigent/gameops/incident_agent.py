@@ -32,7 +32,7 @@ class GameOpsIncidentAgent:
             retrieved_chunk_ids=[result.chunk.chunk_id for result in retrieved],
             validation_notes=[
                 "事故由第一方 GameOps 事故工作流完成定级。",
-                "已根据内置事故手册校验通信节奏、升级路径和补偿建议。",
+                "已根据已配置事故手册校验通信节奏、升级路径和补偿建议。",
             ],
         )
         if _requires_approval(request):
@@ -79,14 +79,20 @@ def _severity_for(request: IncidentRunbookRequest) -> IncidentSeverity:
     has_payment_or_login = any(term in text for term in ("login", "payment", "recharge", "order"))
     if has_core_outage and (duration >= 30 or has_payment_or_login):
         return "sev1"
-    if has_payment_or_login or duration >= 15 or any(term in text for term in ("degraded", "delayed", "major")):
+    if (
+        has_payment_or_login
+        or duration >= 15
+        or any(term in text for term in ("degraded", "delayed", "major"))
+    ):
         return "sev2"
     return "sev3"
 
 
 def _risk_for(request: IncidentRunbookRequest, severity: IncidentSeverity) -> RiskLevel:
     text = _combined_text(request)
-    if severity == "sev1" or any(term in text for term in ("payment loss", "refund", "all players")):
+    if severity == "sev1" or any(
+        term in text for term in ("payment loss", "refund", "all players")
+    ):
         return RiskLevel.CRITICAL
     if severity == "sev2" or _requires_approval(request):
         return RiskLevel.HIGH
@@ -122,9 +128,7 @@ def _communication_cadence(severity: IncidentSeverity) -> str:
 
 def _escalation_path(request: IncidentRunbookRequest, severity: IncidentSeverity) -> str:
     if severity == "sev1":
-        return (
-            "立即指定事故指挥官、服务端排查负责人、客服话术负责人和补偿方案负责人。"
-        )
+        return "立即指定事故指挥官、服务端排查负责人、客服话术负责人和补偿方案负责人。"
     if _requires_approval(request):
         return "公开沟通前，先把事故负责人和补偿方案提交给运营负责人审批。"
     return "指定事故负责人和客服话术负责人；如果影响范围或持续时间扩大，立即升级。"
@@ -132,9 +136,7 @@ def _escalation_path(request: IncidentRunbookRequest, severity: IncidentSeverity
 
 def _compensation_guidance(request: IncidentRunbookRequest) -> str:
     if _requires_approval(request):
-        return (
-            "暂时不要承诺高级货币、退款或全账号补偿。先整理书面补偿方案，并取得事故指挥官或运营负责人审批。"
-        )
+        return "暂时不要承诺高级货币、退款或全账号补偿。先整理书面补偿方案，并取得事故指挥官或运营负责人审批。"
     if request.duration_minutes is None:
         return "先补齐持续时间和可量化玩家损失数据，再决定仅公告说明还是进入补偿流程。"
     if request.duration_minutes < 15:

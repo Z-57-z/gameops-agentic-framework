@@ -199,6 +199,20 @@ class TicketTriageRequest(BaseModel):
 TicketPriority = Literal["low", "medium", "high", "urgent"]
 IncidentSeverity = Literal["sev1", "sev2", "sev3"]
 ExecutionTaskStatus = Literal["pending", "waiting_approval", "in_progress", "blocked", "done"]
+ExecutionDecision = Literal["approved", "rejected"]
+ExecutionToolStatus = Literal["success", "blocked"]
+ExecutionAction = Literal["approve", "run"]
+ExecutionLoopPhase = Literal["precheck", "execute", "verify", "state_update"]
+ExecutionLoopStepStatus = Literal["success", "blocked", "skipped"]
+ExecutionPrecheckStatus = Literal["pass", "blocked"]
+ExecutionRecoveryActionKind = Literal[
+    "collect_evidence",
+    "request_approval",
+    "request_permission",
+    "retry",
+    "manual_handoff",
+]
+EnterpriseReadinessStatus = Literal["ready", "warning", "missing"]
 
 
 class ExecutionTask(BaseModel):
@@ -211,6 +225,221 @@ class ExecutionTask(BaseModel):
     due: str
     approval_required: bool = False
     evidence_required: list[str] = Field(default_factory=list)
+    approved_by: str | None = None
+    approval_comment: str | None = None
+
+
+class ExecutionApprovalRequest(BaseModel):
+    """Approve or reject a workflow task before execution."""
+
+    task: ExecutionTask
+    approver: str = Field(min_length=1, max_length=200)
+    decision: ExecutionDecision
+    comment: str | None = Field(default=None, max_length=1000)
+
+    @field_validator("approver")
+    @classmethod
+    def _strip_approver(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("approver must not be empty")
+        return stripped
+
+    @field_validator("comment")
+    @classmethod
+    def _strip_comment(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        stripped = value.strip()
+        return stripped or None
+
+
+class ExecutionRunRequest(BaseModel):
+    """Run a workflow task through the first-party GameOps tool layer."""
+
+    task: ExecutionTask
+    operator: str = Field(min_length=1, max_length=200)
+    operator_role: str | None = Field(default=None, max_length=200)
+    evidence: dict[str, str] = Field(default_factory=dict)
+
+    @field_validator("operator")
+    @classmethod
+    def _strip_operator(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("operator must not be empty")
+        return stripped
+
+    @field_validator("operator_role")
+    @classmethod
+    def _strip_operator_role(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        stripped = value.strip()
+        return stripped or None
+
+
+class ExecutionToolResult(BaseModel):
+    """Result returned by a safe built-in GameOps tool adapter."""
+
+    tool_name: str
+    status: ExecutionToolStatus
+    summary: str
+    evidence: dict[str, str] = Field(default_factory=dict)
+    receipt: ExecutionToolReceipt | None = None
+
+
+class ExecutionToolReceipt(BaseModel):
+    """Structured receipt returned by a first-party business tool adapter."""
+
+    system: str
+    operation: str
+    reference_id: str
+    dry_run: bool = True
+    written_fields: list[str] = Field(default_factory=list)
+    verification_notes: list[str] = Field(default_factory=list)
+
+
+class ExecutionLoopStep(BaseModel):
+    """One deterministic step in the first-party GameOps execution loop."""
+
+    phase: ExecutionLoopPhase
+    status: ExecutionLoopStepStatus
+    summary: str
+
+
+class ExecutionPrecheckItem(BaseModel):
+    """One business gate evaluated before a GameOps task can run."""
+
+    check_id: str
+    label: str
+    status: ExecutionPrecheckStatus
+    detail: str
+
+
+class ExecutionRecoveryAction(BaseModel):
+    """Suggested next action when the execution loop cannot complete."""
+
+    action_id: str
+    kind: ExecutionRecoveryActionKind
+    label: str
+    description: str
+
+
+class ExecutionActionResponse(BaseModel):
+    """Task state, tool result, and audit output after an execution action."""
+
+    task: ExecutionTask
+    tool_result: ExecutionToolResult
+    missing_evidence: list[str] = Field(default_factory=list)
+    approval_required: bool = False
+    precheck_items: list[ExecutionPrecheckItem] = Field(default_factory=list)
+    loop_steps: list[ExecutionLoopStep] = Field(default_factory=list)
+    recovery_actions: list[ExecutionRecoveryAction] = Field(default_factory=list)
+    audit: AuditTrail
+
+
+class ExecutionHistoryRecord(BaseModel):
+    """A compact audit row for a GameOps execution action."""
+
+    record_id: str
+    created_at: str
+    action: ExecutionAction
+    actor: str
+    task_id: str
+    task_title: str
+    tool_name: str
+    status: ExecutionToolStatus
+    summary: str
+    evidence: dict[str, str] = Field(default_factory=dict)
+    validation_notes: list[str] = Field(default_factory=list)
+
+
+class ExecutionHistoryResponse(BaseModel):
+    """Recent execution action history for the GameOps task console."""
+
+    records: list[ExecutionHistoryRecord] = Field(default_factory=list)
+
+
+class ExecutionTaskRegistrationRequest(BaseModel):
+    """Register workflow-generated tasks with the execution runtime."""
+
+    tasks: list[ExecutionTask] = Field(default_factory=list)
+
+
+class ExecutionTaskListResponse(BaseModel):
+    """Current persisted task state for the GameOps task console."""
+
+    tasks: list[ExecutionTask] = Field(default_factory=list)
+
+
+class ExecutionReportResponse(BaseModel):
+    """Markdown handoff report generated from execution audit records."""
+
+    generated_at: str
+    record_count: int
+    markdown: str
+
+
+class ExecutionRetryPolicy(BaseModel):
+    """Retry settings for a first-party GameOps tool."""
+
+    max_attempts: int = Field(ge=1, le=5)
+    backoff_seconds: int = Field(ge=0, le=3600)
+
+
+class ExecutionPolicyRule(BaseModel):
+    """A visible business guardrail for a GameOps execution task."""
+
+    task_id: str
+    title: str
+    tool_name: str
+    target_system: str
+    operation: str
+    required_role: str
+    risk_level: RiskLevel
+    retry_policy: ExecutionRetryPolicy
+    failure_mode: ExecutionRecoveryActionKind
+    approval_required: bool = False
+    evidence_required: list[str] = Field(default_factory=list)
+    guardrails: list[str] = Field(default_factory=list)
+
+
+class ExecutionPolicyResponse(BaseModel):
+    """Read-only execution rules used by the GameOps task console."""
+
+    rules: list[ExecutionPolicyRule] = Field(default_factory=list)
+
+
+class EnterpriseReadinessItem(BaseModel):
+    """One production-readiness check for an enterprise GameOps rollout."""
+
+    component: str
+    status: EnterpriseReadinessStatus
+    summary: str
+    detail: str
+    remediation: str | None = None
+
+
+class EnterpriseReadinessResponse(BaseModel):
+    """Aggregated readiness view for operating GameOps in enterprise environments."""
+
+    overall_status: EnterpriseReadinessStatus
+    integration_mode: str
+    dry_run: bool
+    tool_count: int
+    items: list[EnterpriseReadinessItem] = Field(default_factory=list)
+
+
+class ExecutionMetricsResponse(BaseModel):
+    """Operational counters for monitoring the GameOps execution runtime."""
+
+    total_actions: int
+    successful_actions: int
+    blocked_actions: int
+    task_status_counts: dict[str, int] = Field(default_factory=dict)
+    storage_backend: str
+    dry_run: bool
 
 
 class TicketTriageResponse(BaseModel):

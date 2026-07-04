@@ -51,8 +51,15 @@ services:
       PORT: "8000"
       OMNIGENT_AUTH_ENABLED: ${OMNIGENT_AUTH_ENABLED:-0}
       OMNIGENT_AUTH_PROVIDER: ${OMNIGENT_AUTH_PROVIDER:-}
+      GAMEOPS_API_KEY: ${GAMEOPS_API_KEY:-}
       OMNIGENT_LOCAL_SINGLE_USER: "1"
       OMNIGENT_ACCOUNTS_AUTO_OPEN: "0"
+      GAMEOPS_EXECUTION_HISTORY_PATH: ${GAMEOPS_EXECUTION_HISTORY_PATH:-/data/gameops-execution-audit.jsonl}
+      GAMEOPS_EXECUTION_TASKS_PATH: ${GAMEOPS_EXECUTION_TASKS_PATH:-/data/gameops-execution-tasks.json}
+      GAMEOPS_EXECUTION_DB_PATH: ${GAMEOPS_EXECUTION_DB_PATH:-/data/gameops-execution.db}
+      GAMEOPS_EXECUTION_POLICY_PATH: ${GAMEOPS_EXECUTION_POLICY_PATH:-/app/docs/gameops-execution-policy.example.json}
+      GAMEOPS_KNOWLEDGE_DIR: ${GAMEOPS_KNOWLEDGE_DIR:-/data/gameops-knowledge}
+      GAMEOPS_TOOL_DRY_RUN: ${GAMEOPS_TOOL_DRY_RUN:-true}
       LLM_PROVIDER: ${LLM_PROVIDER:-openai-compatible}
       LLM_MODEL: ${LLM_MODEL:-}
       LLM_BASE_URL: ${LLM_BASE_URL:-}
@@ -65,6 +72,7 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     volumes:
       - app-data:/data
+      - gameops-knowledge:/data/gameops-knowledge
     ports:
       - "8080:8000"
 
@@ -132,4 +140,5 @@ services:
 volumes:
   postgres-data:
   app-data:
+  gameops-knowledge:
   host-data:

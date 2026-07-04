@@ -55,7 +55,9 @@ class LexicalRetriever:
             if any(term in _tokens(chunk.section) for term in query_terms):
                 score += 3.0
             results.append(RetrievalResult(chunk=chunk, score=score, matched_terms=matched))
-        results.sort(key=lambda result: (-result.score, result.chunk.source_id, result.chunk.chunk_id))
+        results.sort(
+            key=lambda result: (-result.score, result.chunk.source_id, result.chunk.chunk_id)
+        )
         return results[:limit]
 
 

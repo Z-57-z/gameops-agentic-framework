@@ -1,1 +1,1 @@
-"""Bundled GameOps demo knowledge documents."""
+"""Starter GameOps knowledge documents for tests and local evaluation."""

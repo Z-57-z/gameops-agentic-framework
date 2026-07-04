@@ -84,4 +84,3 @@ def route_workflow(question: str, mode: GameOpsMode | None = None) -> WorkflowKi
 
 def _contains_any(text: str, terms: set[str]) -> bool:
     return any(term in text for term in terms)
-

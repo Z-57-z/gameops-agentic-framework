@@ -1,0 +1,46 @@
+{
+  "tools": {
+    "approval-launch": {
+      "target_system": "活动发布审批台",
+      "operation": "记录上线审批",
+      "required_role": "运营负责人",
+      "risk_level": "high",
+      "retry_policy": {
+        "max_attempts": 2,
+        "backoff_seconds": 30
+      },
+      "failure_mode": "manual_handoff",
+      "approval_required": true,
+      "evidence_required": ["公告草稿", "奖励配置截图", "回滚方案"],
+      "guardrails": ["高价值奖励上线前必须审批，不调用外部 Agent 自动批准。"]
+    },
+    "exception-approval": {
+      "target_system": "客服例外审批台",
+      "operation": "记录例外审批",
+      "required_role": "运营负责人",
+      "risk_level": "high",
+      "retry_policy": {
+        "max_attempts": 2,
+        "backoff_seconds": 30
+      },
+      "failure_mode": "manual_handoff",
+      "approval_required": true,
+      "evidence_required": ["负责人审批记录", "政策依据", "日志截图"],
+      "guardrails": ["补偿、账号操作或例外承诺必须审批。"]
+    },
+    "approval-compensation": {
+      "target_system": "事故补偿审批台",
+      "operation": "审批补偿公告",
+      "required_role": "运营负责人",
+      "risk_level": "critical",
+      "retry_policy": {
+        "max_attempts": 2,
+        "backoff_seconds": 30
+      },
+      "failure_mode": "manual_handoff",
+      "approval_required": true,
+      "evidence_required": ["补偿方案", "影响范围", "公告草稿"],
+      "guardrails": ["公开提及补偿前必须审批，不调用外部 Agent 自动批准。"]
+    }
+  }
+}

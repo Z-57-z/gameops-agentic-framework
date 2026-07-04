@@ -64,7 +64,21 @@ def create_default_ticket_triage_agent(
 
 def _category_for(ticket_text: str) -> str:
     text = ticket_text.lower()
-    if any(term in text for term in ("ban", "banned", "login", "account", "suspicious", "封禁", "封号", "登录", "账号", "异常")):
+    if any(
+        term in text
+        for term in (
+            "ban",
+            "banned",
+            "login",
+            "account",
+            "suspicious",
+            "封禁",
+            "封号",
+            "登录",
+            "账号",
+            "异常",
+        )
+    ):
         return "account_access"
     if any(
         term in text
@@ -119,7 +133,11 @@ def _missing_information(request: TicketTriageRequest, category: str) -> list[st
         missing.append("player_id")
     if request.server_id is None and not _text_has_server_id(request.ticket_text):
         missing.append("server_id")
-    if category == "account_access" and request.account_id is None and not _text_has_account_id(request.ticket_text):
+    if (
+        category == "account_access"
+        and request.account_id is None
+        and not _text_has_account_id(request.ticket_text)
+    ):
         missing.append("account_id")
     if category == "payment_reward":
         if request.order_id is None and not _text_has_order_id(request.ticket_text):
@@ -128,7 +146,11 @@ def _missing_information(request: TicketTriageRequest, category: str) -> list[st
             missing.append("event_id")
         if request.timestamp is None and not _text_has_timestamp(request.ticket_text):
             missing.append("timestamp")
-    if category == "event_participation" and request.event_id is None and not _text_has_event_id(request.ticket_text):
+    if (
+        category == "event_participation"
+        and request.event_id is None
+        and not _text_has_event_id(request.ticket_text)
+    ):
         missing.append("event_id")
     return missing
 
@@ -184,7 +206,9 @@ def _next_actions(category: str, missing: list[str], risk_level: RiskLevel) -> l
     return actions
 
 
-def _execution_tasks(category: str, missing: list[str], risk_level: RiskLevel) -> list[ExecutionTask]:
+def _execution_tasks(
+    category: str, missing: list[str], risk_level: RiskLevel
+) -> list[ExecutionTask]:
     tasks = [
         ExecutionTask(
             task_id="ticket-intake",
@@ -192,7 +216,8 @@ def _execution_tasks(category: str, missing: list[str], risk_level: RiskLevel) -
             owner_role="客服受理人",
             status="blocked" if missing else "pending",
             due="首次处理结论前",
-            evidence_required=[_field_label(item) for item in missing] or ["玩家 ID", "服务器 ID", "问题描述"],
+            evidence_required=[_field_label(item) for item in missing]
+            or ["玩家 ID", "服务器 ID", "问题描述"],
         )
     ]
     if category == "payment_reward":
@@ -266,7 +291,9 @@ def _field_label(value: str) -> str:
 
 
 def _text_has_player_id(text: str) -> bool:
-    return _matches_any(text, (r"玩家\s*id\s*(?:是|为|[:：])?\s*[\w-]+", r"player-\d+", r"player[_-]?\w+"))
+    return _matches_any(
+        text, (r"玩家\s*id\s*(?:是|为|[:：])?\s*[\w-]+", r"player-\d+", r"player[_-]?\w+")
+    )
 
 
 def _text_has_server_id(text: str) -> bool:
@@ -286,7 +313,9 @@ def _text_has_event_id(text: str) -> bool:
 
 
 def _text_has_timestamp(text: str) -> bool:
-    return _matches_any(text, (r"\d{4}[-/年]\d{1,2}[-/月]\d{1,2}", r"\d{1,2}[:：]\d{2}", r"发生时间"))
+    return _matches_any(
+        text, (r"\d{4}[-/年]\d{1,2}[-/月]\d{1,2}", r"\d{1,2}[:：]\d{2}", r"发生时间")
+    )
 
 
 def _matches_any(text: str, patterns: tuple[str, ...]) -> bool:

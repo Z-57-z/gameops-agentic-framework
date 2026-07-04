@@ -1,12 +1,17 @@
 import pytest
 
+from omnigent.gameops.knowledge_store import load_starter_knowledge_base
 from omnigent.gameops.schemas import RiskLevel, TicketTriageRequest, WorkflowKind
 from omnigent.gameops.ticket_triage_agent import create_default_ticket_triage_agent
 
 
+def _starter_agent():
+    return create_default_ticket_triage_agent(load_starter_knowledge_base())
+
+
 @pytest.mark.asyncio
 async def test_ticket_triage_identifies_missing_reward_case() -> None:
-    agent = create_default_ticket_triage_agent()
+    agent = _starter_agent()
 
     response = await agent.triage(
         TicketTriageRequest(

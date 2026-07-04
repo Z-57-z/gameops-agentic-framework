@@ -37,7 +37,7 @@ class GameOpsCampaignAgent:
             retrieved_chunk_ids=[result.chunk.chunk_id for result in retrieved],
             validation_notes=[
                 "活动方案由第一方 GameOps 活动工作流生成。",
-                "上线检查已对照内置活动检查清单评估。",
+                "上线检查已对照已配置活动检查清单评估。",
             ],
         )
         if missing:
@@ -114,8 +114,7 @@ def _launch_checks(request: CampaignDraftRequest) -> list[CampaignLaunchCheck]:
         CampaignLaunchCheck(
             label="客服口径",
             status="warning" if request.support_notes is None else "pass",
-            detail=request.support_notes
-            or "公开公告前需要先复核客服 FAQ。",
+            detail=request.support_notes or "公开公告前需要先复核客服 FAQ。",
         ),
     ]
 
@@ -137,7 +136,13 @@ def _risk_for(request: CampaignDraftRequest, missing: list[str]) -> RiskLevel:
     text = f"{request.reward_rules} {request.rollback_plan or ''}".lower()
     if "refund" in text or "rollback all" in text:
         return RiskLevel.CRITICAL
-    if missing or "premium currency" in text or "gems" in text or "高级货币" in text or "宝石" in text:
+    if (
+        missing
+        or "premium currency" in text
+        or "gems" in text
+        or "高级货币" in text
+        or "宝石" in text
+    ):
         return RiskLevel.HIGH
     return RiskLevel.MEDIUM
 
@@ -164,7 +169,9 @@ def _execution_tasks(
             task_id="campaign-config",
             title="复核活动配置与奖励规则",
             owner_role="活动运营负责人",
-            status="blocked" if _has_any_missing(missing, {"活动开始时间", "活动结束时间"}) else "pending",
+            status="blocked"
+            if _has_any_missing(missing, {"活动开始时间", "活动结束时间"})
+            else "pending",
             due="上线前",
             evidence_required=_missing_or_default(
                 missing,
@@ -178,7 +185,9 @@ def _execution_tasks(
             owner_role="运营负责人",
             status="blocked" if "回滚方案" in missing else "pending",
             due="上线审批前",
-            evidence_required=["回滚方案"] if "回滚方案" in missing else ["回滚方案", "触发条件", "执行负责人"],
+            evidence_required=["回滚方案"]
+            if "回滚方案" in missing
+            else ["回滚方案", "触发条件", "执行负责人"],
         ),
         ExecutionTask(
             task_id="support-faq",
@@ -186,7 +195,9 @@ def _execution_tasks(
             owner_role="客服话术负责人",
             status="blocked" if "客服 FAQ 备注" in missing else "pending",
             due="公告发布前",
-            evidence_required=["客服 FAQ 备注"] if "客服 FAQ 备注" in missing else ["客服 FAQ", "公告草稿"],
+            evidence_required=["客服 FAQ 备注"]
+            if "客服 FAQ 备注" in missing
+            else ["客服 FAQ", "公告草稿"],
         ),
     ]
     if risk_level in {RiskLevel.HIGH, RiskLevel.CRITICAL}:

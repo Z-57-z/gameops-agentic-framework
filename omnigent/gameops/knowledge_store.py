@@ -1,7 +1,8 @@
-"""Bundled Markdown knowledge loading for GameOps workflows."""
+"""Markdown knowledge loading for GameOps workflows."""
 
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass
 from importlib import resources
@@ -9,7 +10,8 @@ from pathlib import Path
 
 from omnigent.gameops.schemas import KnowledgeChunk
 
-_DATA_PATH = "omnigent/gameops/data"
+GAMEOPS_KNOWLEDGE_DIR_ENV = "GAMEOPS_KNOWLEDGE_DIR"
+_STARTER_DATA_PATH = "omnigent/gameops/data"
 _SOURCE_TITLES = {
     "event_rebate_policy": "充值返利政策",
     "compensation_policy": "补偿政策",
@@ -49,7 +51,29 @@ class KnowledgeStore:
 
 
 def load_default_knowledge_base() -> KnowledgeStore:
-    """Load the repository-bundled GameOps knowledge base."""
+    """Load enterprise-configured GameOps knowledge, or return an empty store."""
+    configured_dir = os.getenv(GAMEOPS_KNOWLEDGE_DIR_ENV, "").strip()
+    if not configured_dir:
+        return KnowledgeStore(())
+    return load_knowledge_base_from_path(Path(configured_dir))
+
+
+def load_knowledge_base_from_path(data_root: Path) -> KnowledgeStore:
+    """Load Markdown GameOps knowledge from a configured directory."""
+    if not data_root.exists() or not data_root.is_dir():
+        return KnowledgeStore(())
+    chunks: list[KnowledgeChunk] = []
+    for entry in sorted(data_root.iterdir(), key=lambda item: item.name):
+        if not entry.name.endswith(".md") or not entry.is_file():
+            continue
+        source_id = Path(entry.name).stem
+        text = entry.read_text(encoding="utf-8")
+        chunks.extend(_split_markdown(source_id, text, path=str(entry)))
+    return KnowledgeStore(tuple(chunks))
+
+
+def load_starter_knowledge_base() -> KnowledgeStore:
+    """Load starter policy documents used by tests and local evaluation."""
     data_root = resources.files("omnigent.gameops").joinpath("data")
     chunks: list[KnowledgeChunk] = []
     for entry in sorted(data_root.iterdir(), key=lambda item: item.name):
@@ -57,11 +81,13 @@ def load_default_knowledge_base() -> KnowledgeStore:
             continue
         source_id = Path(entry.name).stem
         text = entry.read_text(encoding="utf-8")
-        chunks.extend(_split_markdown(source_id, text))
+        chunks.extend(
+            _split_markdown(source_id, text, path=f"{_STARTER_DATA_PATH}/{source_id}.md")
+        )
     return KnowledgeStore(tuple(chunks))
 
 
-def _split_markdown(source_id: str, text: str) -> list[KnowledgeChunk]:
+def _split_markdown(source_id: str, text: str, *, path: str) -> list[KnowledgeChunk]:
     lines = text.splitlines()
     title = _SOURCE_TITLES.get(source_id, source_id.replace("_", " ").title())
     document_title = title
@@ -84,6 +110,7 @@ def _split_markdown(source_id: str, text: str) -> list[KnowledgeChunk]:
                         current_start,
                         index - 1,
                         current_lines,
+                        path,
                     )
                 )
             current_section = line[3:].strip() or "Untitled"
@@ -104,6 +131,7 @@ def _split_markdown(source_id: str, text: str) -> list[KnowledgeChunk]:
                 current_start,
                 len(lines),
                 current_lines,
+                path,
             )
         )
     return chunks
@@ -116,13 +144,14 @@ def _build_chunk(
     line_start: int,
     line_end: int,
     lines: list[str],
+    path: str,
 ) -> KnowledgeChunk:
     slug = re.sub(r"[^a-z0-9]+", "-", section.lower()).strip("-") or "overview"
     return KnowledgeChunk(
         source_id=source_id,
         title=_SOURCE_TITLES.get(source_id, title),
         section=_SECTION_TITLES.get(section, section),
-        path=f"{_DATA_PATH}/{source_id}.md",
+        path=path,
         chunk_id=f"{source_id}#{slug}",
         text="\n".join(lines).strip(),
         line_start=line_start,
