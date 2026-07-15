@@ -11,6 +11,9 @@ from pathlib import Path
 from typing import Literal
 
 from omnigent.gameops.schemas import (
+    ApprovalProvenance,
+    CompensationApprovalEvaluateRequest,
+    CompensationApprovalEvaluateResponse,
     AuditTrail,
     ExecutionAction,
     ExecutionActionResponse,
@@ -448,6 +451,41 @@ class GameOpsExecutionRuntime:
         self._remember_task(task)
         return response
 
+    async def evaluate_compensation_approval(
+        self,
+        request: CompensationApprovalEvaluateRequest,
+        evaluator: "CompensationApprovalEvaluator",
+    ) -> CompensationApprovalEvaluateResponse:
+        """Evaluate and persist AI provenance without identifying AI as a human approver."""
+        decision = await evaluator.evaluate(request)
+        task = request.task.model_copy(
+            update={
+                "status": "pending" if decision.decision_status == "auto_approved" else "waiting_approval",
+                "approval_provenance": ApprovalProvenance(
+                    source=decision.decision_source,
+                    decision_id=decision.decision_id,
+                    summary=decision.reason,
+                    decided_at=decision.decided_at,
+                ),
+            }
+        )
+        approved = decision.decision_status == "auto_approved"
+        response = ExecutionActionResponse(
+            task=task,
+            tool_result=ExecutionToolResult(
+                tool_name="gameops.ai_compensation_approval",
+                status="success" if approved else "blocked",
+                summary="AI compensation approval completed." if approved else "AI requires manual review.",
+                evidence=dict(request.evidence),
+            ),
+            approval_required=not approved,
+            audit=AuditTrail(validation_notes=[decision.reason, *decision.hard_rule_results]),
+            decision=decision,
+        )
+        self._remember("ai_approve", "gameops-ai", response)
+        self._remember_task(task)
+        return CompensationApprovalEvaluateResponse(task=task, decision=decision, audit=response.audit)
+
     def run(self, request: ExecutionRunRequest) -> ExecutionActionResponse:
         """Run a task if approval and required evidence are complete."""
         definition = self.tools.definition_for(request.task)
@@ -493,7 +531,11 @@ class GameOpsExecutionRuntime:
             self._remember("run", request.operator, response)
             return response
 
-        if request.task.approval_required and request.task.approved_by is None:
+        ai_approved = (
+            request.task.approval_provenance is not None
+            and request.task.approval_provenance.source == "ai_auto"
+        )
+        if request.task.approval_required and request.task.approved_by is None and not ai_approved:
             response = self._blocked_response(
                 request=request,
                 summary="任务需要审批通过后才能执行。",
@@ -1032,6 +1074,7 @@ class GameOpsExecutionRuntime:
             summary=response.tool_result.summary,
             evidence=response.tool_result.evidence,
             validation_notes=response.audit.validation_notes,
+            decision=response.decision,
         )
         self._next_record_id += 1
         self._history.append(record)

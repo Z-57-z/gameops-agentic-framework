@@ -8,11 +8,17 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 
 from omnigent.gameops.agent_loop import GameOpsAgentLoop, create_default_gameops_agent
 from omnigent.gameops.campaign_agent import GameOpsCampaignAgent, create_default_campaign_agent
+from omnigent.gameops.compensation_approval import (
+    CompensationApprovalEvaluator,
+    create_default_compensation_approval_evaluator,
+)
 from omnigent.gameops.execution import GameOpsExecutionRuntime, create_default_execution_runtime
 from omnigent.gameops.incident_agent import GameOpsIncidentAgent, create_default_incident_agent
 from omnigent.gameops.schemas import (
     CampaignDraftRequest,
     CampaignDraftResponse,
+    CompensationApprovalEvaluateRequest,
+    CompensationApprovalEvaluateResponse,
     ExecutionActionResponse,
     ExecutionApprovalRequest,
     EnterpriseReadinessResponse,
@@ -59,6 +65,7 @@ def create_gameops_router(
     ticket_triage_agent: GameOpsTicketTriageAgent | None = None,
     incident_agent: GameOpsIncidentAgent | None = None,
     execution_runtime: GameOpsExecutionRuntime | None = None,
+    compensation_approval_evaluator: CompensationApprovalEvaluator | None = None,
 ) -> APIRouter:
     """Build routes mounted under `/v1` for GameOps business workflows."""
     router = APIRouter(dependencies=[Depends(require_gameops_api_key)])
@@ -67,6 +74,9 @@ def create_gameops_router(
     gameops_ticket_triage_agent = ticket_triage_agent or create_default_ticket_triage_agent()
     gameops_incident_agent = incident_agent or create_default_incident_agent()
     gameops_execution_runtime = execution_runtime or create_default_execution_runtime()
+    gameops_compensation_approval_evaluator = (
+        compensation_approval_evaluator or create_default_compensation_approval_evaluator()
+    )
 
     @router.post("/gameops/ask")
     async def ask_gameops(request: GameOpsAskRequest) -> GameOpsAskResponse:
@@ -82,6 +92,16 @@ def create_gameops_router(
     async def triage_ticket(request: TicketTriageRequest) -> TicketTriageResponse:
         """Classify and prepare a player support ticket through the first-party runtime."""
         return await gameops_ticket_triage_agent.triage(request)
+
+    @router.post("/gameops/tickets/approval/evaluate")
+    async def evaluate_ticket_approval(
+        request: CompensationApprovalEvaluateRequest,
+    ) -> CompensationApprovalEvaluateResponse:
+        """Evaluate verified missed-reward evidence for AI or human approval."""
+        return await gameops_execution_runtime.evaluate_compensation_approval(
+            request,
+            gameops_compensation_approval_evaluator,
+        )
 
     @router.post("/gameops/incidents/runbook")
     async def plan_incident(request: IncidentRunbookRequest) -> IncidentRunbookResponse:
