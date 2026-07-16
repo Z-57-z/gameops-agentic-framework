@@ -92,6 +92,20 @@ vi.mock("@/lib/gameopsApi", () => ({
       },
     ],
   })),
+  getGameOpsModelSettings: vi.fn(async () => ({
+    provider: null,
+    model: null,
+    baseUrl: null,
+    configured: false,
+    keySuffix: null,
+    source: "none",
+    version: 0,
+  })),
+  saveGameOpsModelSettings: vi.fn(),
+  testGameOpsModelSettings: vi.fn(async () => ({
+    connected: true,
+    message: "Connection succeeded.",
+  })),
 }));
 
 afterEach(() => {
@@ -173,6 +187,17 @@ describe("GameOpsPage", () => {
     expect(await screen.findByTestId("enterprise-readiness-card")).toBeInTheDocument();
     expect(screen.getByText(/enterprise-pilot/)).toBeInTheDocument();
     expect(screen.getAllByText(/Dry-run/i).length).toBeGreaterThan(0);
+  });
+
+  it("offers provider, Base URL, password key, and connection test controls", () => {
+    renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "模型设置" }));
+
+    expect(screen.getByLabelText("供应商")).toBeInTheDocument();
+    expect(screen.getByLabelText("Base URL")).toBeInTheDocument();
+    expect(screen.getByLabelText("API Key")).toHaveAttribute("type", "password");
+    expect(screen.getByRole("button", { name: "测试连接" })).toBeInTheDocument();
   });
 
   it("submits a business question and renders structured answer sections", async () => {

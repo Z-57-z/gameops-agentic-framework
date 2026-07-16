@@ -8,6 +8,85 @@ export type GameOpsWorkflow =
   | "incident_runbook";
 export type GameOpsRiskLevel = "low" | "medium" | "high" | "critical";
 
+export interface GameOpsModelSettings {
+  provider: string | null;
+  model: string | null;
+  baseUrl: string | null;
+  configured: boolean;
+  keySuffix: string | null;
+  source: "saved" | "environment" | "none";
+  version: number;
+}
+
+export async function getGameOpsModelSettings(): Promise<GameOpsModelSettings> {
+  const res = await authenticatedFetch("/v1/gameops/model-settings");
+  if (!res.ok) throw new Error(await readErrorMessage(res));
+  const value = (await res.json()) as Record<string, unknown>;
+  return {
+    provider: value.provider as string | null,
+    model: value.model as string | null,
+    baseUrl: value.base_url as string | null,
+    configured: Boolean(value.configured),
+    keySuffix: value.key_suffix as string | null,
+    source: value.source as GameOpsModelSettings["source"],
+    version: Number(value.version ?? 0),
+  };
+}
+
+export async function saveGameOpsModelSettings(input: {
+  provider: string;
+  model: string;
+  baseUrl?: string;
+  apiKey: string;
+}): Promise<GameOpsModelSettings> {
+  const res = await authenticatedFetch("/v1/gameops/model-settings", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      provider: input.provider,
+      model: input.model,
+      base_url: input.baseUrl || null,
+      api_key: input.apiKey,
+    }),
+  });
+  if (!res.ok) throw new Error(await readErrorMessage(res));
+  const value = (await res.json()) as Record<string, unknown>;
+  return {
+    provider: value.provider as string | null,
+    model: value.model as string | null,
+    baseUrl: value.base_url as string | null,
+    configured: Boolean(value.configured),
+    keySuffix: value.key_suffix as string | null,
+    source: value.source as GameOpsModelSettings["source"],
+    version: Number(value.version ?? 0),
+  };
+}
+
+export interface GameOpsModelConnectionTest {
+  connected: boolean;
+  message: string;
+}
+
+export async function testGameOpsModelSettings(input: {
+  provider: string;
+  model: string;
+  baseUrl?: string;
+  apiKey: string;
+}): Promise<GameOpsModelConnectionTest> {
+  const res = await authenticatedFetch("/v1/gameops/model-settings/test", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      provider: input.provider,
+      model: input.model,
+      base_url: input.baseUrl || null,
+      api_key: input.apiKey,
+    }),
+  });
+  if (!res.ok) throw new Error(await readErrorMessage(res));
+  return (await res.json()) as GameOpsModelConnectionTest;
+}
+
 export interface GameOpsAskRequest {
   question: string;
   mode?: GameOpsMode;
@@ -177,6 +256,37 @@ export type ExecutionTaskStatus =
 export type ExecutionDecision = "approved" | "rejected";
 export type ExecutionToolStatus = "success" | "blocked";
 export type ExecutionAction = "approve" | "run";
+export type ApprovalDecisionSource = "ai_auto" | "manual" | "rule_blocked" | "fallback";
+export type ApprovalDecisionStatus = "auto_approved" | "manual_review";
+
+export interface AiApprovalDecision {
+  decisionId: string;
+  decisionSource: ApprovalDecisionSource;
+  decisionStatus: ApprovalDecisionStatus;
+  riskLevel: GameOpsRiskLevel;
+  riskScore: number;
+  reason: string;
+  evidenceUsed: string[];
+  modelId: string | null;
+  decidedAt: string;
+}
+
+export interface CompensationApprovalEvaluateRequest {
+  task: ExecutionTask;
+  category: string;
+  player: {
+    accountRiskStatus: "clear" | "flagged" | "unknown";
+    recentManualCompensationCount: number;
+  };
+  verification: {
+    paymentStatus: "paid" | "unpaid" | "unknown";
+    eventEligibility: "eligible" | "ineligible" | "unknown";
+    deliveryStatus: "failed" | "delivered" | "unknown";
+  };
+  rewardType: "consumable" | "premium_currency";
+  rewardAmount: number;
+  evidence: Record<string, string>;
+}
 export type ExecutionLoopPhase = "precheck" | "execute" | "verify" | "state_update";
 export type ExecutionLoopStepStatus = "success" | "blocked" | "skipped";
 export type ExecutionPrecheckStatus = "pass" | "blocked";
@@ -198,6 +308,12 @@ interface ExecutionTaskWire {
   evidence_required: string[];
   approved_by?: string | null;
   approval_comment?: string | null;
+  approval_provenance?: {
+    source: ApprovalDecisionSource;
+    decision_id: string;
+    summary: string;
+    decided_at: string;
+  } | null;
 }
 
 export interface ExecutionTask {
@@ -210,6 +326,12 @@ export interface ExecutionTask {
   evidenceRequired: string[];
   approvedBy?: string | null;
   approvalComment?: string | null;
+  approvalProvenance?: {
+    source: ApprovalDecisionSource;
+    decisionId: string;
+    summary: string;
+    decidedAt: string;
+  } | null;
 }
 
 export interface ExecutionApprovalRequest {
@@ -520,6 +642,60 @@ export async function triageTicket(request: TicketTriageRequest): Promise<Ticket
     throw new Error(await readErrorMessage(res));
   }
   return ticketTriageFromWire((await res.json()) as TicketTriageResponseWire);
+}
+
+export async function evaluateCompensationApproval(
+  request: CompensationApprovalEvaluateRequest,
+): Promise<{ task: ExecutionTask; decision: AiApprovalDecision }> {
+  const res = await authenticatedFetch("/v1/gameops/tickets/approval/evaluate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      task: executionTaskToWire(request.task),
+      category: request.category,
+      player: {
+        account_risk_status: request.player.accountRiskStatus,
+        recent_manual_compensation_count: request.player.recentManualCompensationCount,
+      },
+      verification: {
+        payment_status: request.verification.paymentStatus,
+        event_eligibility: request.verification.eventEligibility,
+        delivery_status: request.verification.deliveryStatus,
+      },
+      reward_type: request.rewardType,
+      reward_amount: request.rewardAmount,
+      evidence: request.evidence,
+    }),
+  });
+  if (!res.ok) throw new Error(await readErrorMessage(res));
+  const wire = (await res.json()) as {
+    task: ExecutionTaskWire;
+    decision: {
+      decision_id: string;
+      decision_source: ApprovalDecisionSource;
+      decision_status: ApprovalDecisionStatus;
+      risk_level: GameOpsRiskLevel;
+      risk_score: number;
+      reason: string;
+      evidence_used: string[];
+      model_id?: string | null;
+      decided_at: string;
+    };
+  };
+  return {
+    task: executionTaskFromWire(wire.task),
+    decision: {
+      decisionId: wire.decision.decision_id,
+      decisionSource: wire.decision.decision_source,
+      decisionStatus: wire.decision.decision_status,
+      riskLevel: wire.decision.risk_level,
+      riskScore: wire.decision.risk_score,
+      reason: wire.decision.reason,
+      evidenceUsed: wire.decision.evidence_used,
+      modelId: wire.decision.model_id ?? null,
+      decidedAt: wire.decision.decided_at,
+    },
+  };
 }
 
 export async function planIncident(
@@ -894,6 +1070,14 @@ function executionTaskFromWire(wire: ExecutionTaskWire): ExecutionTask {
     evidenceRequired: wire.evidence_required,
     approvedBy: wire.approved_by ?? null,
     approvalComment: wire.approval_comment ?? null,
+    approvalProvenance: wire.approval_provenance
+      ? {
+          source: wire.approval_provenance.source,
+          decisionId: wire.approval_provenance.decision_id,
+          summary: wire.approval_provenance.summary,
+          decidedAt: wire.approval_provenance.decided_at,
+        }
+      : null,
   };
 }
 
@@ -908,6 +1092,14 @@ function executionTaskToWire(task: ExecutionTask): ExecutionTaskWire {
     evidence_required: task.evidenceRequired,
     approved_by: task.approvedBy ?? null,
     approval_comment: task.approvalComment ?? null,
+    approval_provenance: task.approvalProvenance
+      ? {
+          source: task.approvalProvenance.source,
+          decision_id: task.approvalProvenance.decisionId,
+          summary: task.approvalProvenance.summary,
+          decided_at: task.approvalProvenance.decidedAt,
+        }
+      : null,
   };
 }
 

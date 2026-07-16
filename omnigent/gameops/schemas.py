@@ -201,7 +201,7 @@ IncidentSeverity = Literal["sev1", "sev2", "sev3"]
 ExecutionTaskStatus = Literal["pending", "waiting_approval", "in_progress", "blocked", "done"]
 ExecutionDecision = Literal["approved", "rejected"]
 ExecutionToolStatus = Literal["success", "blocked"]
-ExecutionAction = Literal["approve", "run"]
+ExecutionAction = Literal["approve", "ai_approve", "run"]
 ExecutionLoopPhase = Literal["precheck", "execute", "verify", "state_update"]
 ExecutionLoopStepStatus = Literal["success", "blocked", "skipped"]
 ExecutionPrecheckStatus = Literal["pass", "blocked"]
@@ -213,6 +213,32 @@ ExecutionRecoveryActionKind = Literal[
     "manual_handoff",
 ]
 EnterpriseReadinessStatus = Literal["ready", "warning", "missing"]
+ApprovalDecisionSource = Literal["ai_auto", "manual", "rule_blocked", "fallback"]
+ApprovalDecisionStatus = Literal["auto_approved", "manual_review"]
+
+
+class ApprovalProvenance(BaseModel):
+    """Identifies the source of an approval decision without impersonating a human."""
+
+    source: ApprovalDecisionSource
+    decision_id: str
+    summary: str
+    decided_at: str
+
+
+class PlayerApprovalProfile(BaseModel):
+    """Minimal player-risk information needed for compensation approval."""
+
+    account_risk_status: Literal["clear", "flagged", "unknown"]
+    recent_manual_compensation_count: int = Field(ge=0)
+
+
+class PaymentRewardVerification(BaseModel):
+    """Verified facts for a missed payment-reward claim."""
+
+    payment_status: Literal["paid", "unpaid", "unknown"]
+    event_eligibility: Literal["eligible", "ineligible", "unknown"]
+    delivery_status: Literal["failed", "delivered", "unknown"]
 
 
 class ExecutionTask(BaseModel):
@@ -227,6 +253,80 @@ class ExecutionTask(BaseModel):
     evidence_required: list[str] = Field(default_factory=list)
     approved_by: str | None = None
     approval_comment: str | None = None
+    approval_provenance: ApprovalProvenance | None = None
+
+
+class AiApprovalDecision(BaseModel):
+    """Structured and auditable result of the AI compensation evaluator."""
+
+    decision_id: str
+    decision_source: ApprovalDecisionSource
+    decision_status: ApprovalDecisionStatus
+    risk_level: RiskLevel
+    risk_score: int = Field(ge=0, le=100)
+    reason: str
+    evidence_used: list[str] = Field(default_factory=list)
+    hard_rule_results: list[str] = Field(default_factory=list)
+    model_id: str | None = None
+    configuration_version: int = 0
+    prompt_version: str
+    decided_at: str
+
+
+class CompensationApprovalEvaluateRequest(BaseModel):
+    """Evidence package evaluated before a missed-reward task can run."""
+
+    task: ExecutionTask
+    category: str
+    player: PlayerApprovalProfile
+    verification: PaymentRewardVerification
+    reward_type: Literal["consumable", "premium_currency"]
+    reward_amount: int = Field(ge=1)
+    evidence: dict[str, str] = Field(default_factory=dict)
+
+
+class ModelSettingsUpdateRequest(BaseModel):
+    """Write-only model configuration submitted from the GameOps console."""
+
+    provider: str = Field(min_length=1, max_length=100)
+    model: str = Field(min_length=1, max_length=200)
+    base_url: str | None = Field(default=None, max_length=500)
+    api_key: str | None = Field(default=None, max_length=1000)
+
+    @field_validator("provider", "model")
+    @classmethod
+    def _strip_model_identity(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("field must not be empty")
+        return stripped
+
+    @field_validator("base_url", "api_key")
+    @classmethod
+    def _strip_optional_model_value(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        stripped = value.strip()
+        return stripped or None
+
+
+class ModelSettingsPublic(BaseModel):
+    """Safe model configuration status returned to clients."""
+
+    provider: str | None = None
+    model: str | None = None
+    base_url: str | None = None
+    configured: bool
+    key_suffix: str | None = None
+    source: Literal["saved", "environment", "none"]
+    version: int = 0
+
+
+class ModelSettingsConnectionTestResponse(BaseModel):
+    """Non-secret result of a provider connectivity test."""
+
+    connected: bool
+    message: str
 
 
 class ExecutionApprovalRequest(BaseModel):
@@ -337,6 +437,15 @@ class ExecutionActionResponse(BaseModel):
     loop_steps: list[ExecutionLoopStep] = Field(default_factory=list)
     recovery_actions: list[ExecutionRecoveryAction] = Field(default_factory=list)
     audit: AuditTrail
+    decision: AiApprovalDecision | None = None
+
+
+class CompensationApprovalEvaluateResponse(BaseModel):
+    """Updated task and decision returned by the AI approval endpoint."""
+
+    task: ExecutionTask
+    decision: AiApprovalDecision
+    audit: AuditTrail
 
 
 class ExecutionHistoryRecord(BaseModel):
@@ -353,6 +462,7 @@ class ExecutionHistoryRecord(BaseModel):
     summary: str
     evidence: dict[str, str] = Field(default_factory=dict)
     validation_notes: list[str] = Field(default_factory=list)
+    decision: AiApprovalDecision | None = None
 
 
 class ExecutionHistoryResponse(BaseModel):
