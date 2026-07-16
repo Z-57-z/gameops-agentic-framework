@@ -18,6 +18,7 @@ import {
   askGameOps,
   approveExecutionTask,
   draftCampaign,
+  evaluateCompensationApproval,
   getEnterpriseReadiness,
   listExecutionHistory,
   listExecutionPolicy,
@@ -27,6 +28,7 @@ import {
   runExecutionTask,
   triageTicket,
   type CampaignDraftResponse,
+  type AiApprovalDecision,
   type EnterpriseReadinessResponse,
   type EnterpriseReadinessStatus,
   type ExecutionActionResponse,
@@ -868,6 +870,7 @@ function ExecutionTaskClosurePanel({ title, tasks }: { title: string; tasks: Exe
   const [localTasks, setLocalTasks] = useState(tasks);
   const [taskEvidence, setTaskEvidence] = useState<Record<string, Record<string, string>>>({});
   const [actionResult, setActionResult] = useState<ExecutionActionResponse | null>(null);
+  const [aiDecision, setAiDecision] = useState<AiApprovalDecision | null>(null);
   const [history, setHistory] = useState<ExecutionHistoryRecord[]>([]);
   const [report, setReport] = useState<ExecutionReportResponse | null>(null);
   const [policyRules, setPolicyRules] = useState<ExecutionPolicyRule[]>([]);
@@ -1025,6 +1028,37 @@ function ExecutionTaskClosurePanel({ title, tasks }: { title: string; tasks: Exe
                   ))}
                 </div>
               )}
+              {task.taskId === "exception-approval" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={pendingAction === `ai:${task.taskId}`}
+                  onClick={async () => {
+                    setPendingAction(`ai:${task.taskId}`);
+                    setActionError(null);
+                    try {
+                      const result = await evaluateCompensationApproval({
+                        task,
+                        category: "payment_reward",
+                        player: { accountRiskStatus: "clear", recentManualCompensationCount: 0 },
+                        verification: { paymentStatus: "paid", eventEligibility: "eligible", deliveryStatus: "failed" },
+                        rewardType: "consumable",
+                        rewardAmount: 1,
+                        evidence: evidenceValues,
+                      });
+                      setLocalTasks((current) => current.map((item) => item.taskId === result.task.taskId ? result.task : item));
+                      setAiDecision(result.decision);
+                      await refreshHistory();
+                    } catch (error) {
+                      setActionError(error instanceof Error ? error.message : "AI 审批失败");
+                    } finally {
+                      setPendingAction(null);
+                    }
+                  }}
+                >
+                  AI 智能审批
+                </Button>
+              )}
               <div className="mt-3 flex flex-wrap gap-2">
                 {task.approvalRequired && task.status === "waiting_approval" && (
                   <Button
@@ -1094,6 +1128,20 @@ function ExecutionTaskClosurePanel({ title, tasks }: { title: string; tasks: Exe
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {aiDecision && (
+        <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 p-3 text-sm">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
+              {aiDecision.decisionStatus === "auto_approved" ? "AI 自动审批" : "转人工审批"}
+            </span>
+            <span className="text-xs text-muted-foreground">模型：{aiDecision.modelId ?? "未配置模型"}</span>
+          </div>
+          <p className="mt-2">风险：{aiDecision.riskLevel} / {aiDecision.riskScore}</p>
+          <p>{aiDecision.reason}</p>
+          <p className="mt-1 text-xs text-muted-foreground">决策 ID：{aiDecision.decisionId}</p>
         </div>
       )}
 
