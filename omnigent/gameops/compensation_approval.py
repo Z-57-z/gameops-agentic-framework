@@ -96,7 +96,11 @@ def _parse_model_recommendation(response: str) -> _ModelRecommendation:
         if lines and lines[-1].strip() == "```":
             lines = lines[:-1]
         candidate = "\n".join(lines).strip()
-    return _ModelRecommendation.model_validate_json(candidate)
+    json_start = candidate.find("{")
+    if json_start < 0:
+        raise ValueError("Model response did not contain a JSON object")
+    payload, _end = json.JSONDecoder().raw_decode(candidate[json_start:])
+    return _ModelRecommendation.model_validate(payload)
 
 
 def _decision(source: str, status: str, risk_level: str, risk_score: int, reason: str, rules: list[str], evidence: list[str] | None = None, model_id: str | None = None, configuration_version: int = 0) -> AiApprovalDecision:

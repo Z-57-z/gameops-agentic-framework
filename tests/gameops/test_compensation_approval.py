@@ -112,6 +112,22 @@ async def test_markdown_wrapped_model_json_is_auto_approved() -> None:
 
 
 @pytest.mark.asyncio
+async def test_explanatory_text_around_model_json_is_auto_approved() -> None:
+    from omnigent.gameops.compensation_approval import CompensationApprovalEvaluator
+
+    result = await CompensationApprovalEvaluator(
+        FakeLlm(
+            "根据已核验的订单和发奖日志，结论如下：\n"
+            '{"risk_level":"low","risk_score":12,"recommended_action":"auto_approve",'
+            '"reason":"Payment and delivery logs agree.","evidence_used":["order","delivery"]}'
+            "\n以上为审批建议。"
+        )
+    ).evaluate(_eligible_request())
+
+    assert result.decision_source == "ai_auto"
+
+
+@pytest.mark.asyncio
 async def test_flagged_account_never_calls_model() -> None:
     from omnigent.gameops.compensation_approval import CompensationApprovalEvaluator
 
