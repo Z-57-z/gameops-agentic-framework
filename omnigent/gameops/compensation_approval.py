@@ -35,9 +35,18 @@ class CompensationApprovalEvaluator:
         if self._llm_client is None:
             return _decision("fallback", "manual_review", "high", 100, "AI model is not configured.", [])
         try:
-            parsed = _ModelRecommendation.model_validate_json(await self._llm_client.complete(_prompt(request)))
+            parsed = _parse_model_recommendation(await self._llm_client.complete(_prompt(request)))
         except (RuntimeError, ValidationError, ValueError, json.JSONDecodeError):
-            return _decision("fallback", "manual_review", "high", 100, "AI review failed validation.", [])
+            return _decision(
+                "fallback",
+                "manual_review",
+                "high",
+                100,
+                "AI review failed validation.",
+                [],
+                model_id=self._llm_client.model_id,
+                configuration_version=getattr(self._llm_client, "configuration_version", 0),
+            )
         if parsed.risk_level in {"low", "medium"} and parsed.recommended_action == "auto_approve":
             return _decision("ai_auto", "auto_approved", parsed.risk_level, parsed.risk_score, parsed.reason, [], parsed.evidence_used, self._llm_client.model_id, getattr(self._llm_client, "configuration_version", 0))
         return _decision("fallback", "manual_review", parsed.risk_level, parsed.risk_score, parsed.reason, [], parsed.evidence_used, self._llm_client.model_id, getattr(self._llm_client, "configuration_version", 0))
@@ -70,7 +79,24 @@ def _hard_rules(request: CompensationApprovalEvaluateRequest) -> list[str]:
 
 
 def _prompt(request: CompensationApprovalEvaluateRequest) -> str:
-    return "Return JSON only for this verified reward claim: " + request.model_dump_json()
+    return (
+        "Return one JSON object only, with risk_level, risk_score, recommended_action, "
+        "reason, and evidence_used. Do not use Markdown or explanatory text. "
+        "Evaluate this verified reward claim: "
+        + request.model_dump_json()
+    )
+
+
+def _parse_model_recommendation(response: str) -> _ModelRecommendation:
+    candidate = response.strip()
+    if candidate.startswith("```"):
+        lines = candidate.splitlines()
+        if lines and lines[0].lstrip().startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        candidate = "\n".join(lines).strip()
+    return _ModelRecommendation.model_validate_json(candidate)
 
 
 def _decision(source: str, status: str, risk_level: str, risk_score: int, reason: str, rules: list[str], evidence: list[str] | None = None, model_id: str | None = None, configuration_version: int = 0) -> AiApprovalDecision:

@@ -95,6 +95,23 @@ async def test_verified_claim_is_auto_approved() -> None:
 
 
 @pytest.mark.asyncio
+async def test_markdown_wrapped_model_json_is_auto_approved() -> None:
+    from omnigent.gameops.compensation_approval import CompensationApprovalEvaluator
+
+    result = await CompensationApprovalEvaluator(
+        FakeLlm(
+            "```json\n"
+            '{"risk_level":"low","risk_score":12,"recommended_action":"auto_approve",'
+            '"reason":"Payment and delivery logs agree.","evidence_used":["order","delivery"]}'
+            "\n```"
+        )
+    ).evaluate(_eligible_request())
+
+    assert result.decision_source == "ai_auto"
+    assert result.model_id == "fake-model"
+
+
+@pytest.mark.asyncio
 async def test_flagged_account_never_calls_model() -> None:
     from omnigent.gameops.compensation_approval import CompensationApprovalEvaluator
 
@@ -116,6 +133,7 @@ async def test_invalid_model_json_falls_back_to_manual_review() -> None:
 
     assert result.decision_source == "fallback"
     assert result.decision_status == "manual_review"
+    assert result.model_id == "fake-model"
 
 
 @pytest.mark.asyncio
