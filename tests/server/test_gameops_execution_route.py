@@ -42,6 +42,18 @@ async def _successful_connection_test(**_: str | None) -> None:
     return None
 
 
+def test_model_settings_default_path_uses_temp_directory_outside_docker(
+    monkeypatch: MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    import omnigent.server.routes.gameops as routes
+
+    monkeypatch.delenv("ARTIFACT_DIR", raising=False)
+    monkeypatch.setattr(routes.tempfile, "gettempdir", lambda: str(tmp_path))
+
+    assert routes._default_model_settings_path() == tmp_path / "omnigent" / "gameops-model-settings.db"
+
+
 def _task(
     task_id: str = "custom-task",
     *,

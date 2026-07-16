@@ -102,7 +102,10 @@ vi.mock("@/lib/gameopsApi", () => ({
     version: 0,
   })),
   saveGameOpsModelSettings: vi.fn(),
-  testGameOpsModelSettings: vi.fn(async () => ({ connected: true, message: "Connection succeeded." })),
+  testGameOpsModelSettings: vi.fn(async () => ({
+    connected: true,
+    message: "Connection succeeded.",
+  })),
 }));
 
 afterEach(() => {

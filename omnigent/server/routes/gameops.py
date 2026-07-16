@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import secrets
+import tempfile
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 
@@ -82,7 +83,7 @@ def create_gameops_router(
     gameops_ticket_triage_agent = ticket_triage_agent or create_default_ticket_triage_agent()
     gameops_incident_agent = incident_agent or create_default_incident_agent()
     gameops_execution_runtime = execution_runtime or create_default_execution_runtime()
-    settings_path = Path(os.getenv("GAMEOPS_MODEL_SETTINGS_DB_PATH", "/data/gameops-model-settings.db"))
+    settings_path = Path(os.getenv("GAMEOPS_MODEL_SETTINGS_DB_PATH", _default_model_settings_path()))
     gameops_model_settings = model_settings_store or GameOpsModelSettingsStore(
         settings_path,
         _model_settings_encryption_key(settings_path),
@@ -212,6 +213,13 @@ def create_gameops_router(
         return gameops_execution_runtime.metrics()
 
     return router
+
+
+def _default_model_settings_path() -> Path:
+    artifact_dir = os.getenv("ARTIFACT_DIR")
+    if artifact_dir:
+        return Path(artifact_dir) / "gameops-model-settings.db"
+    return Path(tempfile.gettempdir()) / "omnigent" / "gameops-model-settings.db"
 
 
 def _model_settings_encryption_key(database_path: Path) -> bytes:

@@ -144,8 +144,18 @@ const EMPTY_INCIDENT_FORM: IncidentFormState = {
 
 const MODEL_PROVIDER_PRESETS = [
   { id: "openai", label: "OpenAI", baseUrl: "https://api.openai.com/v1", model: "gpt-4.1-mini" },
-  { id: "deepseek", label: "DeepSeek", baseUrl: "https://api.deepseek.com/v1", model: "deepseek-chat" },
-  { id: "tongyi", label: "Tongyi compatible", baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1", model: "qwen-plus" },
+  {
+    id: "deepseek",
+    label: "DeepSeek",
+    baseUrl: "https://api.deepseek.com/v1",
+    model: "deepseek-chat",
+  },
+  {
+    id: "tongyi",
+    label: "Tongyi compatible",
+    baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    model: "qwen-plus",
+  },
   { id: "custom", label: "Custom compatible", baseUrl: "", model: "" },
 ] as const;
 
@@ -208,7 +218,8 @@ export function GameOpsPage() {
   const [readiness, setReadiness] = useState<EnterpriseReadinessResponse | null>(null);
   const [modelSettings, setModelSettings] = useState<GameOpsModelSettings | null>(null);
   const [showModelSettings, setShowModelSettings] = useState(false);
-  const [modelProvider, setModelProvider] = useState<(typeof MODEL_PROVIDER_PRESETS)[number]["id"]>("openai");
+  const [modelProvider, setModelProvider] =
+    useState<(typeof MODEL_PROVIDER_PRESETS)[number]["id"]>("openai");
   const [modelName, setModelName] = useState("");
   const [modelBaseUrl, setModelBaseUrl] = useState("https://api.openai.com/v1");
   const [modelKey, setModelKey] = useState("");
@@ -259,7 +270,10 @@ export function GameOpsPage() {
       .then((settings) => {
         if (cancelled) return;
         setModelSettings(settings);
-        if (settings.provider && MODEL_PROVIDER_PRESETS.some((item) => item.id === settings.provider)) {
+        if (
+          settings.provider &&
+          MODEL_PROVIDER_PRESETS.some((item) => item.id === settings.provider)
+        ) {
           setModelProvider(settings.provider as (typeof MODEL_PROVIDER_PRESETS)[number]["id"]);
         } else if (settings.provider) {
           setModelProvider("custom");
@@ -346,7 +360,9 @@ export function GameOpsPage() {
       setModelKey("");
       setModelSettingsMessage("Configuration saved. AI approval will use it on the next request.");
     } catch (error) {
-      setModelSettingsError(error instanceof Error ? error.message : "Could not save model settings.");
+      setModelSettingsError(
+        error instanceof Error ? error.message : "Could not save model settings.",
+      );
     } finally {
       setModelSettingsPending(null);
     }
@@ -387,7 +403,9 @@ export function GameOpsPage() {
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               <SelectField label="供应商" value={modelProvider} onChange={selectModelProvider}>
                 {MODEL_PROVIDER_PRESETS.map((provider) => (
-                  <option key={provider.id} value={provider.id}>{provider.label}</option>
+                  <option key={provider.id} value={provider.id}>
+                    {provider.label}
+                  </option>
                 ))}
               </SelectField>
               <TextField label="模型" value={modelName} onChange={setModelName} />
@@ -395,17 +413,36 @@ export function GameOpsPage() {
               <TextField label="API Key" type="password" value={modelKey} onChange={setModelKey} />
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Button variant="outline" disabled={!modelName.trim() || !modelKey.trim() || modelSettingsPending !== null} onClick={() => void testModelSettings()}>
+              <Button
+                variant="outline"
+                disabled={!modelName.trim() || !modelKey.trim() || modelSettingsPending !== null}
+                onClick={() => void testModelSettings()}
+              >
                 {modelSettingsPending === "test" ? "Testing..." : "测试连接"}
               </Button>
-              <Button disabled={!modelName.trim() || (!modelKey.trim() && !modelSettings?.configured) || modelSettingsPending !== null} onClick={() => void saveModelSettings()}>
+              <Button
+                disabled={
+                  !modelName.trim() ||
+                  (!modelKey.trim() && !modelSettings?.configured) ||
+                  modelSettingsPending !== null
+                }
+                onClick={() => void saveModelSettings()}
+              >
                 {modelSettingsPending === "save" ? "Saving..." : "保存配置"}
               </Button>
               <span className="text-xs text-muted-foreground">
-                {modelSettings?.configured ? `${modelSettings.model} ${modelSettings.keySuffix ?? ""} v${modelSettings.version}` : "未配置"}
+                {modelSettings?.configured
+                  ? `${modelSettings.model} ${modelSettings.keySuffix ?? ""} v${modelSettings.version}`
+                  : "未配置"}
               </span>
-              {modelSettingsMessage && <span className="text-xs text-emerald-700">{modelSettingsMessage}</span>}
-              {modelSettingsError && <span role="alert" className="text-xs text-destructive">{modelSettingsError}</span>}
+              {modelSettingsMessage && (
+                <span className="text-xs text-emerald-700">{modelSettingsMessage}</span>
+              )}
+              {modelSettingsError && (
+                <span role="alert" className="text-xs text-destructive">
+                  {modelSettingsError}
+                </span>
+              )}
             </div>
           </div>
         )}
@@ -1185,12 +1222,20 @@ function ExecutionTaskClosurePanel({ title, tasks }: { title: string; tasks: Exe
                         task,
                         category: "payment_reward",
                         player: { accountRiskStatus: "clear", recentManualCompensationCount: 0 },
-                        verification: { paymentStatus: "paid", eventEligibility: "eligible", deliveryStatus: "failed" },
+                        verification: {
+                          paymentStatus: "paid",
+                          eventEligibility: "eligible",
+                          deliveryStatus: "failed",
+                        },
                         rewardType: "consumable",
                         rewardAmount: 1,
                         evidence: evidenceValues,
                       });
-                      setLocalTasks((current) => current.map((item) => item.taskId === result.task.taskId ? result.task : item));
+                      setLocalTasks((current) =>
+                        current.map((item) =>
+                          item.taskId === result.task.taskId ? result.task : item,
+                        ),
+                      );
                       setAiDecision(result.decision);
                       await refreshHistory();
                     } catch (error) {
@@ -1281,9 +1326,13 @@ function ExecutionTaskClosurePanel({ title, tasks }: { title: string; tasks: Exe
             <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
               {aiDecision.decisionStatus === "auto_approved" ? "AI 自动审批" : "转人工审批"}
             </span>
-            <span className="text-xs text-muted-foreground">模型：{aiDecision.modelId ?? "未配置模型"}</span>
+            <span className="text-xs text-muted-foreground">
+              模型：{aiDecision.modelId ?? "未配置模型"}
+            </span>
           </div>
-          <p className="mt-2">风险：{aiDecision.riskLevel} / {aiDecision.riskScore}</p>
+          <p className="mt-2">
+            风险：{aiDecision.riskLevel} / {aiDecision.riskScore}
+          </p>
           <p>{aiDecision.reason}</p>
           <p className="mt-1 text-xs text-muted-foreground">决策 ID：{aiDecision.decisionId}</p>
         </div>
