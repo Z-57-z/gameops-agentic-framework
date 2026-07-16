@@ -153,6 +153,37 @@ async def test_invalid_model_json_falls_back_to_manual_review() -> None:
 
 
 @pytest.mark.asyncio
+async def test_model_deny_recommendation_becomes_manual_review() -> None:
+    from omnigent.gameops.compensation_approval import CompensationApprovalEvaluator
+
+    result = await CompensationApprovalEvaluator(
+        FakeLlm(
+            '{"risk_level":"high","risk_score":85,"recommended_action":"deny",'
+            '"reason":"Evidence is incomplete.","evidence_used":["evidence"]}'
+        )
+    ).evaluate(_eligible_request())
+
+    assert result.decision_source == "fallback"
+    assert result.decision_status == "manual_review"
+    assert result.reason == "Evidence is incomplete."
+
+
+@pytest.mark.asyncio
+async def test_string_evidence_used_is_normalized_for_auto_approval() -> None:
+    from omnigent.gameops.compensation_approval import CompensationApprovalEvaluator
+
+    result = await CompensationApprovalEvaluator(
+        FakeLlm(
+            '{"risk_level":"low","risk_score":10,"recommended_action":"auto_approve",'
+            '"reason":"Evidence supports approval.","evidence_used":"order, delivery"}'
+        )
+    ).evaluate(_eligible_request())
+
+    assert result.decision_source == "ai_auto"
+    assert result.evidence_used == ["order", "delivery"]
+
+
+@pytest.mark.asyncio
 async def test_auto_approval_persists_provenance_and_audit(tmp_path) -> None:
     from omnigent.gameops.compensation_approval import CompensationApprovalEvaluator
     from omnigent.gameops.execution import GameOpsExecutionRuntime

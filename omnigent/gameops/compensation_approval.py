@@ -7,7 +7,7 @@ import json
 from typing import Literal
 from uuid import uuid4
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from omnigent.gameops.llm_client import LLMClient, create_configured_gameops_llm_client
 from omnigent.gameops.model_settings import GameOpsModelSettingsStore
@@ -19,9 +19,16 @@ _PROMPT_VERSION = "compensation-approval-v1"
 class _ModelRecommendation(BaseModel):
     risk_level: Literal["low", "medium", "high"]
     risk_score: int = Field(ge=0, le=100)
-    recommended_action: Literal["auto_approve", "manual_review"]
+    recommended_action: Literal["auto_approve", "manual_review", "deny"]
     reason: str = Field(min_length=1, max_length=500)
     evidence_used: list[str] = Field(min_length=1, max_length=10)
+
+    @field_validator("evidence_used", mode="before")
+    @classmethod
+    def _normalize_evidence_used(cls, value: object) -> object:
+        if isinstance(value, str):
+            return [item.strip() for item in value.split(",") if item.strip()]
+        return value
 
 
 class CompensationApprovalEvaluator:
@@ -81,7 +88,8 @@ def _hard_rules(request: CompensationApprovalEvaluateRequest) -> list[str]:
 def _prompt(request: CompensationApprovalEvaluateRequest) -> str:
     return (
         "Return one JSON object only, with risk_level, risk_score, recommended_action, "
-        "reason, and evidence_used. Do not use Markdown or explanatory text. "
+        "reason, and evidence_used. recommended_action must be auto_approve or manual_review, "
+        "never deny or reject. Do not use Markdown or explanatory text. "
         "Evaluate this verified reward claim: "
         + request.model_dump_json()
     )
