@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from pytest import MonkeyPatch
 
 from omnigent.gameops.execution import GameOpsExecutionRuntime
+from omnigent.gameops.model_settings import GameOpsModelSettingsStore
 from omnigent.server.routes.gameops import create_gameops_router
 
 
@@ -12,6 +13,33 @@ def _client(execution_runtime: GameOpsExecutionRuntime | None = None) -> TestCli
     app = FastAPI()
     app.include_router(create_gameops_router(execution_runtime=execution_runtime), prefix="/v1")
     return TestClient(app)
+
+
+def test_model_settings_connection_test_does_not_save_candidate(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+    import omnigent.server.routes.gameops as routes
+
+    store = GameOpsModelSettingsStore(tmp_path / "settings.db", b"x" * 32)
+    app = FastAPI()
+    app.include_router(create_gameops_router(model_settings_store=store), prefix="/v1")
+    monkeypatch.setattr(routes, "test_gameops_model_connection", _successful_connection_test)
+
+    response = TestClient(app).post(
+        "/v1/gameops/model-settings/test",
+        json={
+            "provider": "deepseek",
+            "model": "deepseek-chat",
+            "base_url": "https://api.deepseek.com/v1",
+            "api_key": "sk-test-1234",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"connected": True, "message": "Connection succeeded."}
+    assert store.public().configured is False
+
+
+async def _successful_connection_test(**_: str | None) -> None:
+    return None
 
 
 def _task(

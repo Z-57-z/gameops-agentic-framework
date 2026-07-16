@@ -20,12 +20,15 @@ import {
   draftCampaign,
   evaluateCompensationApproval,
   getEnterpriseReadiness,
+  getGameOpsModelSettings,
   listExecutionHistory,
   listExecutionPolicy,
   listExecutionReport,
   planIncident,
   registerExecutionTasks,
   runExecutionTask,
+  saveGameOpsModelSettings,
+  testGameOpsModelSettings,
   triageTicket,
   type CampaignDraftResponse,
   type AiApprovalDecision,
@@ -38,6 +41,7 @@ import {
   type ExecutionTask,
   type GameOpsAskResponse,
   type GameOpsMode,
+  type GameOpsModelSettings,
   type GameOpsSource,
   type IncidentRunbookResponse,
   type TicketTriageResponse,
@@ -138,6 +142,13 @@ const EMPTY_INCIDENT_FORM: IncidentFormState = {
   proposedCompensation: "",
 };
 
+const MODEL_PROVIDER_PRESETS = [
+  { id: "openai", label: "OpenAI", baseUrl: "https://api.openai.com/v1", model: "gpt-4.1-mini" },
+  { id: "deepseek", label: "DeepSeek", baseUrl: "https://api.deepseek.com/v1", model: "deepseek-chat" },
+  { id: "tongyi", label: "Tongyi compatible", baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1", model: "qwen-plus" },
+  { id: "custom", label: "Custom compatible", baseUrl: "", model: "" },
+] as const;
+
 const MODE_TO_WORKFLOW: Record<GameOpsMode, string> = {
   knowledge: "知识问答",
   campaign: "活动运营",
@@ -195,6 +206,15 @@ export function GameOpsPage() {
   const [ticketForm, setTicketForm] = useState<TicketFormState>(EMPTY_TICKET_FORM);
   const [incidentForm, setIncidentForm] = useState<IncidentFormState>(EMPTY_INCIDENT_FORM);
   const [readiness, setReadiness] = useState<EnterpriseReadinessResponse | null>(null);
+  const [modelSettings, setModelSettings] = useState<GameOpsModelSettings | null>(null);
+  const [showModelSettings, setShowModelSettings] = useState(false);
+  const [modelProvider, setModelProvider] = useState<(typeof MODEL_PROVIDER_PRESETS)[number]["id"]>("openai");
+  const [modelName, setModelName] = useState("");
+  const [modelBaseUrl, setModelBaseUrl] = useState("https://api.openai.com/v1");
+  const [modelKey, setModelKey] = useState("");
+  const [modelSettingsError, setModelSettingsError] = useState<string | null>(null);
+  const [modelSettingsMessage, setModelSettingsMessage] = useState<string | null>(null);
+  const [modelSettingsPending, setModelSettingsPending] = useState<"save" | "test" | null>(null);
   const [lastResponse, setLastResponse] = useState<GameOpsAskResponse | null>(null);
   const [lastCampaignResponse, setLastCampaignResponse] = useState<CampaignDraftResponse | null>(
     null,
@@ -235,6 +255,19 @@ export function GameOpsPage() {
       }
     }
     void loadReadiness();
+    void getGameOpsModelSettings()
+      .then((settings) => {
+        if (cancelled) return;
+        setModelSettings(settings);
+        if (settings.provider && MODEL_PROVIDER_PRESETS.some((item) => item.id === settings.provider)) {
+          setModelProvider(settings.provider as (typeof MODEL_PROVIDER_PRESETS)[number]["id"]);
+        } else if (settings.provider) {
+          setModelProvider("custom");
+        }
+        if (settings.model) setModelName(settings.model);
+        if (settings.baseUrl) setModelBaseUrl(settings.baseUrl);
+      })
+      .catch(() => setModelSettings(null));
     return () => {
       cancelled = true;
     };
@@ -269,6 +302,56 @@ export function GameOpsPage() {
     });
   }
 
+  function selectModelProvider(provider: (typeof MODEL_PROVIDER_PRESETS)[number]["id"]) {
+    setModelProvider(provider);
+    const preset = MODEL_PROVIDER_PRESETS.find((item) => item.id === provider);
+    if (!preset) return;
+    setModelBaseUrl(preset.baseUrl);
+    if (preset.model) setModelName(preset.model);
+  }
+
+  async function testModelSettings() {
+    if (!modelName.trim() || !modelKey.trim()) return;
+    setModelSettingsError(null);
+    setModelSettingsMessage(null);
+    setModelSettingsPending("test");
+    try {
+      const result = await testGameOpsModelSettings({
+        provider: modelProvider,
+        model: modelName.trim(),
+        baseUrl: modelBaseUrl.trim(),
+        apiKey: modelKey.trim(),
+      });
+      setModelSettingsMessage(result.message);
+    } catch (error) {
+      setModelSettingsError(error instanceof Error ? error.message : "Connection test failed.");
+    } finally {
+      setModelSettingsPending(null);
+    }
+  }
+
+  async function saveModelSettings() {
+    if (!modelName.trim() || (!modelKey.trim() && !modelSettings?.configured)) return;
+    setModelSettingsError(null);
+    setModelSettingsMessage(null);
+    setModelSettingsPending("save");
+    try {
+      const saved = await saveGameOpsModelSettings({
+        provider: modelProvider,
+        model: modelName.trim(),
+        baseUrl: modelBaseUrl.trim(),
+        apiKey: modelKey.trim(),
+      });
+      setModelSettings(saved);
+      setModelKey("");
+      setModelSettingsMessage("Configuration saved. AI approval will use it on the next request.");
+    } catch (error) {
+      setModelSettingsError(error instanceof Error ? error.message : "Could not save model settings.");
+    } finally {
+      setModelSettingsPending(null);
+    }
+  }
+
   return (
     <main
       data-testid="gameops-page"
@@ -295,6 +378,38 @@ export function GameOpsPage() {
         </div>
       </div>
 
+      <div className="shrink-0 border-b border-border bg-card px-4 py-3 md:px-6">
+        <Button size="sm" variant="outline" onClick={() => setShowModelSettings((value) => !value)}>
+          模型设置
+        </Button>
+        {showModelSettings && (
+          <div className="mt-3 rounded-md border border-primary/30 p-3">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <SelectField label="供应商" value={modelProvider} onChange={selectModelProvider}>
+                {MODEL_PROVIDER_PRESETS.map((provider) => (
+                  <option key={provider.id} value={provider.id}>{provider.label}</option>
+                ))}
+              </SelectField>
+              <TextField label="模型" value={modelName} onChange={setModelName} />
+              <TextField label="Base URL" value={modelBaseUrl} onChange={setModelBaseUrl} />
+              <TextField label="API Key" type="password" value={modelKey} onChange={setModelKey} />
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Button variant="outline" disabled={!modelName.trim() || !modelKey.trim() || modelSettingsPending !== null} onClick={() => void testModelSettings()}>
+                {modelSettingsPending === "test" ? "Testing..." : "测试连接"}
+              </Button>
+              <Button disabled={!modelName.trim() || (!modelKey.trim() && !modelSettings?.configured) || modelSettingsPending !== null} onClick={() => void saveModelSettings()}>
+                {modelSettingsPending === "save" ? "Saving..." : "保存配置"}
+              </Button>
+              <span className="text-xs text-muted-foreground">
+                {modelSettings?.configured ? `${modelSettings.model} ${modelSettings.keySuffix ?? ""} v${modelSettings.version}` : "未配置"}
+              </span>
+              {modelSettingsMessage && <span className="text-xs text-emerald-700">{modelSettingsMessage}</span>}
+              {modelSettingsError && <span role="alert" className="text-xs text-destructive">{modelSettingsError}</span>}
+            </div>
+          </div>
+        )}
+      </div>
       <div
         data-testid="gameops-workspace"
         className="grid min-h-0 flex-1 gap-0 overflow-y-auto lg:grid-cols-[360px_minmax(0,1fr)]"
@@ -640,20 +755,49 @@ function TextField({
   label,
   value,
   onChange,
+  type = "text",
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  type?: "text" | "password";
 }) {
   return (
     <label className="space-y-1 text-sm font-medium">
       <span>{label}</span>
       <input
         aria-label={label}
+        type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition focus:border-primary"
       />
+    </label>
+  );
+}
+
+function SelectField<T extends string>({
+  label,
+  value,
+  onChange,
+  children,
+}: {
+  label: string;
+  value: T;
+  onChange: (value: T) => void;
+  children: ReactNode;
+}) {
+  return (
+    <label className="space-y-1 text-sm font-medium">
+      <span>{label}</span>
+      <select
+        aria-label={label}
+        value={value}
+        onChange={(event) => onChange(event.target.value as T)}
+        className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition focus:border-primary"
+      >
+        {children}
+      </select>
     </label>
   );
 }

@@ -268,6 +268,7 @@ class AiApprovalDecision(BaseModel):
     evidence_used: list[str] = Field(default_factory=list)
     hard_rule_results: list[str] = Field(default_factory=list)
     model_id: str | None = None
+    configuration_version: int = 0
     prompt_version: str
     decided_at: str
 
@@ -282,6 +283,50 @@ class CompensationApprovalEvaluateRequest(BaseModel):
     reward_type: Literal["consumable", "premium_currency"]
     reward_amount: int = Field(ge=1)
     evidence: dict[str, str] = Field(default_factory=dict)
+
+
+class ModelSettingsUpdateRequest(BaseModel):
+    """Write-only model configuration submitted from the GameOps console."""
+
+    provider: str = Field(min_length=1, max_length=100)
+    model: str = Field(min_length=1, max_length=200)
+    base_url: str | None = Field(default=None, max_length=500)
+    api_key: str | None = Field(default=None, max_length=1000)
+
+    @field_validator("provider", "model")
+    @classmethod
+    def _strip_model_identity(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("field must not be empty")
+        return stripped
+
+    @field_validator("base_url", "api_key")
+    @classmethod
+    def _strip_optional_model_value(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        stripped = value.strip()
+        return stripped or None
+
+
+class ModelSettingsPublic(BaseModel):
+    """Safe model configuration status returned to clients."""
+
+    provider: str | None = None
+    model: str | None = None
+    base_url: str | None = None
+    configured: bool
+    key_suffix: str | None = None
+    source: Literal["saved", "environment", "none"]
+    version: int = 0
+
+
+class ModelSettingsConnectionTestResponse(BaseModel):
+    """Non-secret result of a provider connectivity test."""
+
+    connected: bool
+    message: str
 
 
 class ExecutionApprovalRequest(BaseModel):

@@ -10,6 +10,7 @@ from uuid import uuid4
 from pydantic import BaseModel, Field, ValidationError
 
 from omnigent.gameops.llm_client import LLMClient, create_configured_gameops_llm_client
+from omnigent.gameops.model_settings import GameOpsModelSettingsStore
 from omnigent.gameops.schemas import AiApprovalDecision, CompensationApprovalEvaluateRequest
 
 _PROMPT_VERSION = "compensation-approval-v1"
@@ -38,12 +39,14 @@ class CompensationApprovalEvaluator:
         except (RuntimeError, ValidationError, ValueError, json.JSONDecodeError):
             return _decision("fallback", "manual_review", "high", 100, "AI review failed validation.", [])
         if parsed.risk_level in {"low", "medium"} and parsed.recommended_action == "auto_approve":
-            return _decision("ai_auto", "auto_approved", parsed.risk_level, parsed.risk_score, parsed.reason, [], parsed.evidence_used, self._llm_client.model_id)
-        return _decision("fallback", "manual_review", parsed.risk_level, parsed.risk_score, parsed.reason, [], parsed.evidence_used, self._llm_client.model_id)
+            return _decision("ai_auto", "auto_approved", parsed.risk_level, parsed.risk_score, parsed.reason, [], parsed.evidence_used, self._llm_client.model_id, getattr(self._llm_client, "configuration_version", 0))
+        return _decision("fallback", "manual_review", parsed.risk_level, parsed.risk_score, parsed.reason, [], parsed.evidence_used, self._llm_client.model_id, getattr(self._llm_client, "configuration_version", 0))
 
 
-def create_default_compensation_approval_evaluator() -> CompensationApprovalEvaluator:
-    return CompensationApprovalEvaluator(create_configured_gameops_llm_client())
+def create_default_compensation_approval_evaluator(
+    *, store: GameOpsModelSettingsStore | None = None
+) -> CompensationApprovalEvaluator:
+    return CompensationApprovalEvaluator(create_configured_gameops_llm_client(store=store))
 
 
 def _hard_rules(request: CompensationApprovalEvaluateRequest) -> list[str]:
@@ -70,10 +73,10 @@ def _prompt(request: CompensationApprovalEvaluateRequest) -> str:
     return "Return JSON only for this verified reward claim: " + request.model_dump_json()
 
 
-def _decision(source: str, status: str, risk_level: str, risk_score: int, reason: str, rules: list[str], evidence: list[str] | None = None, model_id: str | None = None) -> AiApprovalDecision:
+def _decision(source: str, status: str, risk_level: str, risk_score: int, reason: str, rules: list[str], evidence: list[str] | None = None, model_id: str | None = None, configuration_version: int = 0) -> AiApprovalDecision:
     return AiApprovalDecision(
         decision_id=f"ai-{uuid4()}", decision_source=source, decision_status=status,
         risk_level=risk_level, risk_score=risk_score, reason=reason,
         evidence_used=evidence or [], hard_rule_results=rules, model_id=model_id,
-        prompt_version=_PROMPT_VERSION, decided_at=datetime.now(UTC).isoformat(),
+        configuration_version=configuration_version, prompt_version=_PROMPT_VERSION, decided_at=datetime.now(UTC).isoformat(),
     )

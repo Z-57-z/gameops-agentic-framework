@@ -8,6 +8,55 @@ export type GameOpsWorkflow =
   | "incident_runbook";
 export type GameOpsRiskLevel = "low" | "medium" | "high" | "critical";
 
+export interface GameOpsModelSettings {
+  provider: string | null;
+  model: string | null;
+  baseUrl: string | null;
+  configured: boolean;
+  keySuffix: string | null;
+  source: "saved" | "environment" | "none";
+  version: number;
+}
+
+export async function getGameOpsModelSettings(): Promise<GameOpsModelSettings> {
+  const res = await authenticatedFetch("/v1/gameops/model-settings");
+  if (!res.ok) throw new Error(await readErrorMessage(res));
+  const value = (await res.json()) as Record<string, unknown>;
+  return { provider: value.provider as string | null, model: value.model as string | null, baseUrl: value.base_url as string | null, configured: Boolean(value.configured), keySuffix: value.key_suffix as string | null, source: value.source as GameOpsModelSettings["source"], version: Number(value.version ?? 0) };
+}
+
+export async function saveGameOpsModelSettings(input: { provider: string; model: string; baseUrl?: string; apiKey: string }): Promise<GameOpsModelSettings> {
+  const res = await authenticatedFetch("/v1/gameops/model-settings", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider: input.provider, model: input.model, base_url: input.baseUrl || null, api_key: input.apiKey }) });
+  if (!res.ok) throw new Error(await readErrorMessage(res));
+  const value = (await res.json()) as Record<string, unknown>;
+  return { provider: value.provider as string | null, model: value.model as string | null, baseUrl: value.base_url as string | null, configured: Boolean(value.configured), keySuffix: value.key_suffix as string | null, source: value.source as GameOpsModelSettings["source"], version: Number(value.version ?? 0) };
+}
+
+export interface GameOpsModelConnectionTest {
+  connected: boolean;
+  message: string;
+}
+
+export async function testGameOpsModelSettings(input: {
+  provider: string;
+  model: string;
+  baseUrl?: string;
+  apiKey: string;
+}): Promise<GameOpsModelConnectionTest> {
+  const res = await authenticatedFetch("/v1/gameops/model-settings/test", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      provider: input.provider,
+      model: input.model,
+      base_url: input.baseUrl || null,
+      api_key: input.apiKey,
+    }),
+  });
+  if (!res.ok) throw new Error(await readErrorMessage(res));
+  return (await res.json()) as GameOpsModelConnectionTest;
+}
+
 export interface GameOpsAskRequest {
   question: string;
   mode?: GameOpsMode;
